@@ -316,7 +316,7 @@ const Checkout = () => {
 
   return (
     <div
-      className="min-h-screen bg-[#F7F4EE] transition-opacity duration-300 overflow-x-hidden"
+      className="min-h-screen bg-brown-50 transition-opacity duration-300 overflow-x-hidden"
       style={{
         opacity: showSuccessModal ? 0.3 : 1,
         pointerEvents: showSuccessModal ? 'none' : 'auto',

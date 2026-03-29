@@ -421,7 +421,7 @@ const Profile = () => {
   const isAdmin = authUser?.isAdmin || user?.isAdmin;
 
   return (
-    <div className="min-h-screen bg-[#F7F4EE] font-sans text-zinc-900">
+    <div className="min-h-screen bg-brown-50 font-sans text-brown-800">
 
       {/* HEADER STRIP */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-20">

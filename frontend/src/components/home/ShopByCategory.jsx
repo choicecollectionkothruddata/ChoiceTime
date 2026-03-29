@@ -35,7 +35,7 @@ const categories = [
 
 const ShopByCategory = () => {
   return (
-    <section className="pt-10 md:pt-16 pb-4 md:pb-6 bg-[#F7F4EE]">
+    <section className="pt-10 md:pt-16 pb-4 md:pb-6 bg-brown-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Section Header */}
         <div className="text-center mb-8 md:mb-10">

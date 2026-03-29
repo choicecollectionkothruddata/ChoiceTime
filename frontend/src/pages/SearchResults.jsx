@@ -203,9 +203,9 @@ const SearchResults = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-110px)] md:h-[calc(100vh-110px)] bg-[#F7F4EE] flex flex-col md:flex-row">
+    <div className="min-h-[calc(100vh-110px)] md:h-[calc(100vh-110px)] bg-brown-50 flex flex-col md:flex-row">
       {/* Left Sidebar - Fixed/Sticky */}
-      <div className="hidden lg:block w-72 flex-shrink-0 border-r border-[#E8E4DD] bg-[#F7F4EE] overflow-y-auto">
+      <div className="hidden lg:block w-72 flex-shrink-0 border-r border-brown-200 bg-brown-50 overflow-y-auto">
         <div className="p-4">
           <FilterSidebar
             filters={filters}

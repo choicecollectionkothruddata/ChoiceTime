@@ -218,11 +218,22 @@ export const categoriesAPI = {
   getCategories: async () => apiRequest('/categories'),
 };
 
+// Reels (public - home page trending reels; admin uses adminAPI.getReels)
+export const reelAPI = {
+  getPublicReels: async () => apiRequest('/reels'),
+};
+
 // Product API calls (single products collection: GET /api/products?category=... & GET /api/products/:id)
 export const productAPI = {
   getProducts: async (category, params = {}) => {
     const q = new URLSearchParams({ ...params, ...(category && { category }) }).toString();
     return apiRequest(`/products${q ? `?${q}` : ''}`);
+  },
+
+  /** Per-category sections for home: top sellers from orders, random fallback if no sales */
+  getHomeTopSelling: async (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return apiRequest(`/products/home-top-selling${q ? `?${q}` : ''}`);
   },
 
   getProductById: async (id) => {
@@ -379,11 +390,6 @@ export const adminAPI = {
       method: 'PATCH',
       body: JSON.stringify(payload),
     }),
-};
-
-// Public Reel API (for home page)
-export const reelAPI = {
-  getReels: async () => apiRequest('/reels'),
 };
 
 // Review API calls

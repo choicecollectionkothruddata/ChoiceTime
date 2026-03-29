@@ -57,11 +57,11 @@ const TermsOfService = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F7F4EE] font-sans text-gray-800 py-12">
+    <div className="min-h-screen bg-brown-50 font-sans text-brown-800 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <Link to="/" className="text-[#5C4D3D] hover:text-[#4A3F32] mb-4 inline-flex items-center text-sm font-medium">
+          <Link to="/" className="text-brown-800 hover:text-brown-900 mb-4 inline-flex items-center text-sm font-medium">
             <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -72,7 +72,7 @@ const TermsOfService = () => {
 
         {/* Introduction */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="bg-[#5C4D3D] text-white px-6 py-3">
+          <div className="bg-brown-800 text-white px-6 py-3">
             <h2 className="text-lg font-semibold">Introduction</h2>
           </div>
           <div className="px-6 py-5 space-y-4 text-gray-600 leading-relaxed">
@@ -94,7 +94,7 @@ const TermsOfService = () => {
             <p>
               For the purpose of these Terms of Use, wherever the context so requires, "you", "your," or "user" shall mean any natural or legal person who has agreed to become a user/buyer on the Platform.
             </p>
-            <div className="bg-[#F7F4EE] border border-[#5C4D3D]/20 rounded-lg p-4 my-2">
+            <div className="bg-brown-50 border border-brown-800/20 rounded-lg p-4 my-2">
               <p className="text-gray-800 font-semibold leading-relaxed text-sm uppercase">
                 ACCESSING, BROWSING, OR OTHERWISE USING THE PLATFORM INDICATES YOUR AGREEMENT TO ALL THE TERMS AND CONDITIONS UNDER THESE TERMS OF USE, SO PLEASE READ THEM CAREFULLY BEFORE PROCEEDING.
               </p>
@@ -109,7 +109,7 @@ const TermsOfService = () => {
         <div className="space-y-4">
           {termsSections.map((section, index) => (
             <div key={index} className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-[#5C4D3D] text-white px-6 py-3">
+              <div className="bg-brown-800 text-white px-6 py-3">
                 <h2 className="text-lg font-semibold">{section.title}</h2>
               </div>
               <div className="px-6 py-5">
@@ -120,14 +120,14 @@ const TermsOfService = () => {
 
           {/* 14. Contact Information */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-[#5C4D3D] text-white px-6 py-3">
+            <div className="bg-brown-800 text-white px-6 py-3">
               <h2 className="text-lg font-semibold">14. Contact Information</h2>
             </div>
             <div className="px-6 py-5">
               <p className="text-gray-600 leading-relaxed mb-4">
                 All concerns or communications relating to these Terms must be communicated to us using the contact information provided on this website.
               </p>
-              <div className="p-4 bg-[#F7F4EE] rounded-lg space-y-1">
+              <div className="p-4 bg-brown-50 rounded-lg space-y-1">
                 <p className="text-gray-700"><strong>Choice Collection Kothrud</strong></p>
                 <p className="text-gray-700"><strong>Email:</strong> choicecollectionkothrud@gmail.com</p>
                 <p className="text-gray-700"><strong>Address:</strong> Shop No.3, Paud Rd, near Hotel Durga Cold Coffee, Tarangan Society, Ideal Colony, Kothrud, Pune, Maharashtra 411038</p>

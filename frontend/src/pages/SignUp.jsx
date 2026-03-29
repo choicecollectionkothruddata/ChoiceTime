@@ -77,7 +77,7 @@ const SignUp = () => {
   const SHOW_OTP_LOGIN = false;
 
   return (
-    <div className="fixed inset-0 z-50 flex min-h-screen min-h-[100dvh] bg-[#F7F4EE] font-sans">
+    <div className="fixed inset-0 z-50 flex min-h-screen min-h-[100dvh] bg-brown-50 font-sans">
       <div className="w-full flex flex-col justify-center items-center p-4 sm:p-6 md:p-8 lg:p-12 overflow-y-auto">
         <div className="w-full max-w-[400px] sm:max-w-md mx-auto">
           <div className="bg-white/60 sm:bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-sm border border-gray-200/60 p-4 sm:p-5 md:p-6">

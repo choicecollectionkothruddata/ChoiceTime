@@ -1270,7 +1270,7 @@ const AdminDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F7F4EE] flex items-center justify-center">
+      <div className="min-h-screen bg-brown-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
@@ -1281,8 +1281,8 @@ const AdminDashboard = () => {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-[#F7F4EE] flex items-center justify-center px-4">
-        <div className="bg-white border border-[#E8E4DD] rounded-2xl shadow-sm max-w-lg w-full p-10 text-center space-y-4">
+      <div className="min-h-screen bg-brown-50 flex items-center justify-center px-4">
+        <div className="bg-white border border-brown-200 rounded-2xl shadow-sm max-w-lg w-full p-10 text-center space-y-4">
           <div className="text-4xl">🚫</div>
           <h1 className="text-2xl font-bold text-gray-900">Admin access only</h1>
           <p className="text-gray-600">You need an admin account to view this page.</p>
@@ -1314,22 +1314,22 @@ const AdminDashboard = () => {
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {summary ? (
                 <>
-                  <div className="bg-white rounded-2xl border border-[#E8E4DD] p-4 sm:p-5 shadow-sm">
+                  <div className="bg-white rounded-2xl border border-brown-200 p-4 sm:p-5 shadow-sm">
                     <p className="text-xs uppercase text-gray-500">Revenue</p>
                     <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2">
                       ₹{(summary.totalRevenue ?? 0).toLocaleString()}
                     </p>
                   </div>
-                  <div className="bg-white rounded-2xl border border-[#E8E4DD] p-4 sm:p-5 shadow-sm">
+                  <div className="bg-white rounded-2xl border border-brown-200 p-4 sm:p-5 shadow-sm">
                     <p className="text-xs uppercase text-gray-500">Orders</p>
                     <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2">{summary.totalOrders ?? 0}</p>
                     <p className="text-xs text-gray-500">{summary.pendingOrders ?? 0} pending</p>
                   </div>
-                  <div className="bg-white rounded-2xl border border-[#E8E4DD] p-4 sm:p-5 shadow-sm">
+                  <div className="bg-white rounded-2xl border border-brown-200 p-4 sm:p-5 shadow-sm">
                     <p className="text-xs uppercase text-gray-500">Customers</p>
                     <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2">{summary.totalUsers ?? 0}</p>
                   </div>
-                  <div className="bg-white rounded-2xl border border-[#E8E4DD] p-4 sm:p-5 shadow-sm">
+                  <div className="bg-white rounded-2xl border border-brown-200 p-4 sm:p-5 shadow-sm">
                     <p className="text-xs uppercase text-gray-500">Total Products</p>
                     <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2">
                       {summary.totalProducts?.toLocaleString() || 0}
@@ -1344,7 +1344,7 @@ const AdminDashboard = () => {
 
             {/* Category-wise Product Count */}
             {summary && summary.categoryCounts && Object.keys(summary.categoryCounts).length > 0 && (
-              <div className="bg-white rounded-2xl border border-[#E8E4DD] p-6 shadow-sm">
+              <div className="bg-white rounded-2xl border border-brown-200 p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Products by Category</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {Object.entries(summary.categoryCounts).map(([category, count]) => (
@@ -1737,7 +1737,7 @@ const AdminDashboard = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Choose Company</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Subcategory</label>
                   <select
                       name="subCategory"
                       value={productForm.subCategory}
@@ -1772,7 +1772,7 @@ const AdminDashboard = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Subcategory</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Add Brand Name</label>
                   {isCustomBrand ? (
                     <div className="flex gap-2">
                       <input
@@ -2316,7 +2316,7 @@ const AdminDashboard = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Choose Company</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Subcategory</label>
                     <select
                       name="subCategory"
                       value={productForm.subCategory}
@@ -2348,7 +2348,7 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Subcategory</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Add Brand Name</label>
                     {isCustomBrand ? (
                       <div className="flex gap-2">
                         <input
@@ -3885,7 +3885,7 @@ const AdminDashboard = () => {
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Coupon Management</h2>
 
             {/* Scratch & Win popup — Active / Inactive */}
-            <div className="bg-white rounded-2xl border border-[#E8E4DD] p-4 sm:p-6 shadow-sm">
+            <div className="bg-white rounded-2xl border border-brown-200 p-4 sm:p-6 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Scratch & Win popup</h3>
@@ -3913,7 +3913,7 @@ const AdminDashboard = () => {
             </div>
 
             {/* Create / Edit Coupon Form */}
-            <div className="bg-white rounded-2xl border border-[#E8E4DD] p-4 sm:p-6 shadow-sm">
+            <div className="bg-white rounded-2xl border border-brown-200 p-4 sm:p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 {editingCoupon ? 'Edit Coupon' : 'Create New Coupon'}
               </h3>
@@ -4122,7 +4122,7 @@ const AdminDashboard = () => {
             </div>
 
             {/* Coupons List */}
-            <div className="bg-white rounded-2xl border border-[#E8E4DD] shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-brown-200 shadow-sm overflow-hidden">
               <div className="px-4 sm:px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">All Coupons ({(coupons || []).length})</h3>
                 <button onClick={fetchCoupons} className="text-sm text-gray-600 hover:text-gray-900 font-medium">
@@ -4241,7 +4241,7 @@ const AdminDashboard = () => {
             <p className="text-sm text-gray-600">Manage the policies shown on the product page (Free Shipping, Returns, Secure Payment, etc.).</p>
 
             {/* Order Timeline — shown on Order Success page */}
-            <div className="bg-white rounded-2xl border border-[#E8E4DD] p-4 sm:p-6 shadow-sm">
+            <div className="bg-white rounded-2xl border border-brown-200 p-4 sm:p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Order Timeline (Order Success page)</h3>
               <p className="text-sm text-gray-600 mb-4">Set the stages and delivery estimate shown after a customer places an order.</p>
               <form onSubmit={handleSaveOrderTimeline} className="space-y-4">
@@ -4308,7 +4308,7 @@ const AdminDashboard = () => {
               </form>
             </div>
 
-            <div className="bg-white rounded-2xl border border-[#E8E4DD] p-4 sm:p-6 shadow-sm">
+            <div className="bg-white rounded-2xl border border-brown-200 p-4 sm:p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 {editingShippingReturn ? 'Edit Policy' : 'Add New Policy'}
               </h3>
@@ -4369,7 +4369,7 @@ const AdminDashboard = () => {
               </form>
             </div>
 
-            <div className="bg-white rounded-2xl border border-[#E8E4DD] shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-brown-200 shadow-sm overflow-hidden">
               <div className="px-4 sm:px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">Policies ({(shippingReturnsPolicies || []).length})</h3>
                 <button onClick={fetchShippingReturns} className="text-sm text-gray-600 hover:text-gray-900 font-medium">Refresh</button>
@@ -4427,7 +4427,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F4EE] flex">
+    <div className="min-h-screen bg-brown-50 flex">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div

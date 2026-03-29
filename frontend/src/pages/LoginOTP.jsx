@@ -127,10 +127,10 @@ const LoginOTP = () => {
   const inputClass = "block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-zinc-800 focus:border-transparent sm:text-sm transition duration-150 ease-in-out";
 
   return (
-    <div className="fixed inset-0 z-50 flex min-h-screen bg-[#F7F4EE] font-sans">
+    <div className="fixed inset-0 z-50 flex min-h-screen bg-brown-50 font-sans">
 
       {/* OTP Form - Centered */}
-      <div className="w-full flex flex-col justify-center items-center p-8 lg:p-16 overflow-y-auto bg-[#F7F4EE]">
+      <div className="w-full flex flex-col justify-center items-center p-8 lg:p-16 overflow-y-auto bg-brown-50">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Login via OTP</h2>

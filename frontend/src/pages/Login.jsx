@@ -69,7 +69,7 @@ const Login = () => {
     "block w-full pl-9 pr-9 sm:pr-3 py-2.5 border border-gray-300 rounded-lg text-sm leading-5 bg-white placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-zinc-800 focus:border-transparent transition duration-150";
 
   return (
-    <div className="fixed inset-0 z-50 flex min-h-screen min-h-[100dvh] bg-[#F7F4EE] font-sans">
+    <div className="fixed inset-0 z-50 flex min-h-screen min-h-[100dvh] bg-brown-50 font-sans">
       <div className="w-full flex flex-col justify-center items-center p-4 sm:p-6 md:p-8 lg:p-12 overflow-y-auto">
         <div className="w-full max-w-[400px] sm:max-w-md mx-auto">
           {/* Card container: subtle on mobile, clearer on larger screens */}

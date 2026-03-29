@@ -35,7 +35,7 @@ const FAQSection = () => {
   };
 
   return (
-    <section className="py-10 md:py-16 bg-[#F7F4EE]">
+    <section className="py-10 md:py-16 bg-brown-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Section Header - matching website theme */}
         <div className="text-center mb-8 md:mb-10">
@@ -56,7 +56,7 @@ const FAQSection = () => {
                 className="w-full flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 text-left transition-colors duration-200"
               >
                 <span className="text-xs sm:text-sm font-semibold text-gray-800 pr-4 tracking-wide">{faq.question}</span>
-                <span className={`flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full transition-all duration-300 ${openIndex === index ? 'bg-gray-900 text-white rotate-180' : 'bg-[#F7F4EE] text-gray-600'}`}>
+                <span className={`flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full transition-all duration-300 ${openIndex === index ? 'bg-gray-900 text-white rotate-180' : 'bg-brown-50 text-gray-600'}`}>
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                   </svg>

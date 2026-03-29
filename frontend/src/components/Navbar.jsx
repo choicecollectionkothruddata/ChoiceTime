@@ -156,8 +156,8 @@ const Navbar = () => {
         <nav
           className={`border-b py-1 transition-all duration-300
           ${isScrolled
-              ? 'bg-[#F7F4EE] border-gray-500 shadow-sm'
-              : 'bg-[#F7F4EE] border-gray-400'}`}
+              ? 'bg-brown-50 border-gray-500 shadow-sm'
+              : 'bg-brown-50 border-gray-400'}`}
         >
           <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-0.5">
             <div className="relative flex items-center justify-between h-12 md:h-16">
@@ -286,7 +286,7 @@ const Navbar = () => {
         </nav>
 
         {/* ========== SECONDARY NAVBAR - DESKTOP (Categories – only category name, click = go to category) ========== */}
-        <nav className="hidden md:block bg-[#F7F4EE]/90 border-b border-gray-200 backdrop-blur-sm">
+        <nav className="hidden md:block bg-brown-50/90 border-b border-brown-200 backdrop-blur-sm">
           <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12">
             <div className="flex items-center justify-center gap-1 lg:gap-2 py-1 lg:py-1.5">
               {navLinks.map((link) => (
@@ -304,7 +304,7 @@ const Navbar = () => {
         </nav>
 
         {/* ========== SECONDARY NAVBAR - MOBILE (Horizontal scrollable categories) ========== */}
-        <nav className="md:hidden bg-[#F7F4EE] border-b border-gray-200">
+        <nav className="md:hidden bg-brown-50 border-b border-brown-200">
           <div className="overflow-x-auto scrollbar-hide">
             <div className="flex items-center gap-1 px-3 py-2 min-w-max">
               <Link
@@ -419,7 +419,7 @@ const Navbar = () => {
 
       {/* Drawer */}
       <div
-        className={`fixed inset-y-0 left-0 z-[61] w-[80%] max-w-xs bg-[#F7F4EE] transform transition-transform duration-500 cubic-bezier(0.19, 1, 0.22, 1) flex flex-col md:hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed inset-y-0 left-0 z-[61] w-[80%] max-w-xs bg-brown-50 transform transition-transform duration-500 cubic-bezier(0.19, 1, 0.22, 1) flex flex-col md:hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex flex-col h-full">
           {/* Header with brand logo (matches navbar) */}

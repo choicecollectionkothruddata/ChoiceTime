@@ -10,7 +10,7 @@ const ChevronIcon = ({ isOpen }) => (
 );
 
 const FilterSection = ({ title, isOpen, onToggle, activeCount, children }) => (
-  <div className="border-b border-[#E8E4DD]">
+  <div className="border-b border-brown-200">
     <button
       onClick={onToggle}
       className="w-full flex items-center justify-between py-4 text-left hover:bg-[#EBE7E0] transition-colors"
@@ -99,7 +99,7 @@ const FilterSidebar = ({ filters, onFilterChange, onClearFilters, brands = [], s
     <div className="h-full">
       {/* Header - Only on Desktop */}
       {!isMobile && (
-        <div className="flex items-center justify-between pb-4 mb-2 border-b border-[#E8E4DD]">
+        <div className="flex items-center justify-between pb-4 mb-2 border-b border-brown-200">
           <div className="flex items-center gap-2">
             <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -129,10 +129,10 @@ const FilterSidebar = ({ filters, onFilterChange, onClearFilters, brands = [], s
         </div>
       )}
 
-      {/* Subcategory - First Filter */}
+      {/* Brand Name - First Filter */}
       {brands.length > 0 && (
         <FilterSection 
-          title="Subcategory" 
+          title="Brand Name" 
           isOpen={openSections.brand} 
           onToggle={() => toggle('brand')}
           activeCount={filters.brands?.length || 0}
@@ -193,7 +193,7 @@ const FilterSidebar = ({ filters, onFilterChange, onClearFilters, brands = [], s
         </div>
         
         {/* Custom Range */}
-        <div className="mt-4 pt-4 border-t border-[#E8E4DD]">
+        <div className="mt-4 pt-4 border-t border-brown-200">
           <p className="text-xs text-gray-600 mb-3">Custom Range</p>
           <div className="flex items-center gap-2">
             <div className="flex-1 relative">

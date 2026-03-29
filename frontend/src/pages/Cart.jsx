@@ -144,7 +144,7 @@ const Cart = () => {
   // --- Professional Empty State ---
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-[#F7F4EE] flex flex-col items-center justify-center py-20 px-4">
+      <div className="min-h-screen bg-brown-50 flex flex-col items-center justify-center py-20 px-4">
         <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-gray-100">
           <svg className="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -165,7 +165,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F4EE] font-sans text-gray-900 pb-20">
+    <div className="min-h-screen bg-brown-50 font-sans text-brown-800 pb-20">
 
       {/* Professional Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">

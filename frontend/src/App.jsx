@@ -63,7 +63,7 @@ function AppContent() {
   }, [isAdminRoute]);
 
   return (
-    <div className="min-h-screen bg-[#F7F4EE] flex flex-col">
+    <div className="min-h-screen bg-brown-50 flex flex-col">
       {!isAdminRoute && <Navbar />}
       {showScratchCard && <ScratchCardPopup onClose={() => setShowScratchCard(false)} />}
       <main className={`flex-grow ${!isAdminRoute ? 'pt-[100px] md:pt-[110px] pb-20 md:pb-0' : ''}`}>

@@ -89,24 +89,24 @@ const PrivacyPolicy = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F7F4EE] font-sans text-gray-800 py-12">
+    <div className="min-h-screen bg-brown-50 font-sans text-brown-800 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <Link to="/" className="text-[#5C4D3D] hover:text-[#4A3F32] mb-4 inline-flex items-center text-sm font-medium">
+          <Link to="/" className="text-brown-800 hover:text-brown-900 mb-4 inline-flex items-center text-sm font-medium">
             <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Back to Home
           </Link>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Privacy Policy</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-brown-900 tracking-tight">Privacy Policy</h1>
         </div>
 
         {/* Privacy Policy Sections */}
         <div className="space-y-6">
           {sections.map((section, index) => (
             <div key={index} className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-[#5C4D3D] text-white px-6 py-3">
+              <div className="bg-brown-800 text-white px-6 py-3">
                 <h2 className="text-lg font-semibold">{section.title}</h2>
               </div>
               <div className="px-6 py-5">

@@ -276,7 +276,7 @@ const CategoryPage = () => {
   // Show 404-like message if category not found after loading
   if (!isLoading && navCategories.length > 0 && !currentCategory && slug) {
     return (
-      <div className="min-h-screen bg-[#F7F4EE] flex items-center justify-center">
+      <div className="min-h-screen bg-brown-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Category Not Found</h1>
           <p className="text-gray-600 mb-6">The category "{slug}" does not exist.</p>
@@ -289,9 +289,9 @@ const CategoryPage = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-110px)] md:h-[calc(100vh-110px)] bg-[#F7F4EE] flex flex-col md:flex-row">
+    <div className="min-h-[calc(100vh-110px)] md:h-[calc(100vh-110px)] bg-brown-50 flex flex-col md:flex-row">
       {/* Left Sidebar - Fixed/Sticky */}
-      <div className="hidden lg:block w-72 flex-shrink-0 border-r border-[#E8E4DD] bg-[#F7F4EE] overflow-y-auto">
+      <div className="hidden lg:block w-72 flex-shrink-0 border-r border-brown-200 bg-brown-50 overflow-y-auto">
         <div className="p-4">
           <FilterSidebar
             filters={filters}

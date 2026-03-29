@@ -2,18 +2,18 @@ import { Link } from 'react-router-dom';
 
 const ArrowItem = ({ children }) => (
   <li className="flex items-start">
-    <span className="text-[#5C4D3D] mr-2 mt-0.5 font-bold">&#8594;</span>
+    <span className="text-brown-800 mr-2 mt-0.5 font-bold">&#8594;</span>
     <span>{children}</span>
   </li>
 );
 
 const Returns = () => {
   return (
-    <div className="min-h-screen bg-[#F7F4EE] font-sans text-gray-800 py-12">
+    <div className="min-h-screen bg-brown-50 font-sans text-brown-800 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <Link to="/" className="text-[#5C4D3D] hover:text-[#4A3F32] mb-4 inline-flex items-center text-sm font-medium">
+          <Link to="/" className="text-brown-800 hover:text-brown-900 mb-4 inline-flex items-center text-sm font-medium">
             <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -26,7 +26,7 @@ const Returns = () => {
         <div className="space-y-6">
           {/* Order Cancellation */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-[#5C4D3D] text-white px-6 py-3">
+            <div className="bg-brown-800 text-white px-6 py-3">
               <h2 className="text-lg font-semibold">Order Cancellation</h2>
             </div>
             <div className="px-6 py-5">
@@ -40,7 +40,7 @@ const Returns = () => {
 
           {/* Refund Policy */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-[#5C4D3D] text-white px-6 py-3">
+            <div className="bg-brown-800 text-white px-6 py-3">
               <h2 className="text-lg font-semibold">Refund Policy</h2>
             </div>
             <div className="px-6 py-5 space-y-5">
@@ -67,7 +67,7 @@ const Returns = () => {
 
           {/* Return Policy */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-[#5C4D3D] text-white px-6 py-3">
+            <div className="bg-brown-800 text-white px-6 py-3">
               <h2 className="text-lg font-semibold">Return Policy</h2>
             </div>
             <div className="px-6 py-5 space-y-5">
@@ -112,7 +112,7 @@ const Returns = () => {
           <p className="text-gray-600 mb-4">If you have questions about returns or refunds, our customer service team is here to help.</p>
           <Link
             to="/contact"
-            className="inline-block px-6 py-3 bg-[#5C4D3D] text-white font-semibold rounded-lg hover:bg-[#4A3F32] transition-colors"
+            className="inline-block px-6 py-3 bg-brown-800 text-white font-semibold rounded-lg hover:bg-brown-900 transition-colors"
           >
             Contact Us
           </Link>

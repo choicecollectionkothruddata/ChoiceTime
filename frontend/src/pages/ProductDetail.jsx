@@ -526,12 +526,15 @@ const ProductDetail = () => {
 
               {/* Horizontal Thumbnails - mobile only */}
               {productImages.length > 1 && (
-                <div className="flex sm:hidden gap-1.5 mb-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <div
+                  className="sm:hidden mb-3 overflow-x-auto pb-1 -mx-1 px-1 whitespace-nowrap touch-pan-x"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+                >
                   {productImages.map((img, idx) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedImageIndex(idx)}
-                      className={`relative w-11 h-11 flex-shrink-0 rounded overflow-hidden border-2 transition-all ${
+                      className={`relative inline-flex w-11 h-11 mr-1.5 last:mr-0 align-top rounded overflow-hidden border-2 transition-all ${
                         selectedImageIndex === idx
                           ? 'border-gray-900'
                           : 'border-gray-200 opacity-50 hover:opacity-100'

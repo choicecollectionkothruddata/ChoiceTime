@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { adminAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { uploadVideoToCloudinary, uploadImageToCloudinary } from '../utils/cloudinary';
+import {
+  uploadVideoToCloudinary,
+  uploadImageToCloudinary,
+  MAX_PRODUCT_IMAGE_BYTES,
+} from '../utils/cloudinary';
 
 const statusOptions = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 
@@ -1061,6 +1065,18 @@ const AdminDashboard = () => {
     let completedCount = 0;
 
     for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        setMessage({ type: 'error', text: `${file.name}: only image files are allowed.` });
+        completedCount++;
+        continue;
+      }
+      if (file.size > MAX_PRODUCT_IMAGE_BYTES) {
+        window.alert(
+          `"${file.name}" is larger than 5 MB.\n\nPlease compress it (Photos app, phone gallery editor, or tinypng.com) and try again.`
+        );
+        completedCount++;
+        continue;
+      }
       try {
         setImageUploadProgress(Math.round((completedCount / files.length) * 100));
         const result = await uploadImageToCloudinary(file, (progress) => {
@@ -1916,7 +1932,7 @@ const AdminDashboard = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       <p className="text-sm text-gray-600">Click to upload images</p>
-                      <p className="text-xs text-gray-400">PNG, JPG, WEBP supported. Multiple files allowed.</p>
+                      <p className="text-xs text-gray-400">PNG, JPG, WEBP. Max 5 MB each. Larger files: compress first. Smaller ones auto-compress before upload.</p>
                     </div>
                   )}
                 </div>
@@ -2494,7 +2510,7 @@ const AdminDashboard = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         <p className="text-sm text-gray-600">Click to upload images</p>
-                        <p className="text-xs text-gray-400">PNG, JPG, WEBP supported. Multiple files allowed.</p>
+                        <p className="text-xs text-gray-400">PNG, JPG, WEBP. Max 5 MB each. Larger files: compress first. Smaller ones auto-compress before upload.</p>
                       </div>
                     )}
                   </div>

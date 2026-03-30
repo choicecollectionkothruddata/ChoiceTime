@@ -433,7 +433,14 @@ const AdminDashboard = () => {
       setLoading(true);
       const response = await adminAPI.getReels();
       if (response.success) {
-        setReels(response.data.reels || []);
+        const raw = response.data?.reels;
+        const list = Array.isArray(raw) ? raw : [];
+        setReels(
+          list.map((r) => ({
+            ...r,
+            _id: r?._id != null ? String(r._id) : r?.id != null ? String(r.id) : '',
+          })).filter((r) => r._id)
+        );
       }
     } catch (error) {
       console.error('Error fetching reels:', error);
@@ -467,7 +474,12 @@ const AdminDashboard = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const response = await adminAPI.createReel(reelForm);
+      const payload = {
+        ...reelForm,
+        order: Number(reelForm.order) || 0,
+        isActive: Boolean(reelForm.isActive),
+      };
+      const response = await adminAPI.createReel(payload);
       if (response.success) {
         setMessage({ type: 'success', text: 'Reel added successfully!' });
         resetReelForm();
@@ -485,9 +497,24 @@ const AdminDashboard = () => {
   const handleUpdateReel = async (e) => {
     e.preventDefault();
     if (!editingReel) return;
+    const reelId =
+      editingReel._id != null && editingReel._id !== ''
+        ? String(editingReel._id)
+        : editingReel.id != null
+          ? String(editingReel.id)
+          : '';
+    if (!reelId) {
+      setMessage({ type: 'error', text: 'Cannot update reel: missing id.' });
+      return;
+    }
     try {
       setLoading(true);
-      const response = await adminAPI.updateReel(editingReel._id, reelForm);
+      const payload = {
+        ...reelForm,
+        order: Number(reelForm.order) || 0,
+        isActive: Boolean(reelForm.isActive),
+      };
+      const response = await adminAPI.updateReel(reelId, payload);
       if (response.success) {
         setMessage({ type: 'success', text: 'Reel updated successfully!' });
         resetReelForm();
@@ -532,14 +559,27 @@ const AdminDashboard = () => {
   };
 
   const handleEditReel = (reel) => {
-    setEditingReel(reel);
+    const id =
+      reel?._id != null && reel._id !== ''
+        ? String(reel._id)
+        : reel?.id != null
+          ? String(reel.id)
+          : '';
+    if (!id) {
+      setMessage({ type: 'error', text: 'Cannot edit this reel (missing id). Try refreshing the page.' });
+      return;
+    }
+    setEditingReel({ ...reel, _id: id });
     setReelForm({
-      title: reel.title,
-      videoUrl: reel.videoUrl,
+      title: reel.title || '',
+      videoUrl: reel.videoUrl || '',
       thumbnailUrl: reel.thumbnailUrl || '',
       productLink: reel.productLink || '',
-      isActive: reel.isActive,
-      order: reel.order || 0
+      isActive: reel.isActive !== false,
+      order: reel.order ?? 0,
+    });
+    window.requestAnimationFrame(() => {
+      document.getElementById('admin-reel-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   };
 
@@ -3040,7 +3080,11 @@ const AdminDashboard = () => {
             <p className="text-sm text-gray-600">Add Instagram Reels to display on the home page.</p>
 
             {/* Add/Edit Reel Form */}
-            <form onSubmit={editingReel ? handleUpdateReel : handleCreateReel} className="bg-white rounded-xl border p-6 space-y-4">
+            <form
+              id="admin-reel-form"
+              onSubmit={editingReel ? handleUpdateReel : handleCreateReel}
+              className="bg-white rounded-xl border p-6 space-y-4 scroll-mt-20"
+            >
               <h3 className="font-semibold text-gray-900">{editingReel ? 'Edit Reel' : 'Add New Reel'}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -3097,7 +3141,7 @@ const AdminDashboard = () => {
 
                   {/* URL Input */}
                   <input
-                    type="url"
+                    type="text"
                     name="videoUrl"
                     value={reelForm.videoUrl}
                     onChange={handleReelFormChange}
@@ -3204,26 +3248,30 @@ const AdminDashboard = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {reels.map((reel) => (
-                        <tr key={reel._id} className="hover:bg-gray-50 transition-colors">
+                      {reels.map((reel) => {
+                        const rid = reel._id;
+                        return (
+                        <tr key={rid} className="hover:bg-gray-50 transition-colors">
                           <td className="px-4 py-3">
                             <span className="text-sm text-gray-600">{reel.order}</span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <p className="font-medium text-gray-900 text-sm">{reel.title}</p>
                           </td>
                           <td className="px-4 py-3">
                             <video 
                               src={reel.videoUrl}
                               className="w-16 h-24 object-cover rounded-lg"
                               muted
+                              playsInline
                               onMouseEnter={(e) => e.target.play()}
                               onMouseLeave={(e) => { e.target.pause(); e.target.currentTime = 0; }}
                             />
                           </td>
                           <td className="px-4 py-3">
+                            <p className="font-medium text-gray-900 text-sm">{reel.title}</p>
+                          </td>
+                          <td className="px-4 py-3">
                             <button
-                              onClick={() => handleToggleReelStatus(reel._id)}
+                              type="button"
+                              onClick={() => handleToggleReelStatus(rid)}
                               className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                                 reel.isActive 
                                   ? 'bg-green-100 text-green-700 hover:bg-green-200' 
@@ -3236,13 +3284,15 @@ const AdminDashboard = () => {
                           <td className="px-4 py-3">
                             <div className="flex items-center justify-center gap-2">
                               <button
+                                type="button"
                                 onClick={() => handleEditReel(reel)}
                                 className="px-3 py-1.5 text-xs font-medium bg-gray-900 text-white hover:bg-gray-800 rounded transition-colors"
                               >
                                 Edit
                               </button>
                               <button
-                                onClick={() => handleDeleteReel(reel._id)}
+                                type="button"
+                                onClick={() => handleDeleteReel(rid)}
                                 className="px-3 py-1.5 text-xs font-medium bg-red-600 text-white hover:bg-red-700 rounded transition-colors"
                               >
                                 Delete
@@ -3250,7 +3300,8 @@ const AdminDashboard = () => {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

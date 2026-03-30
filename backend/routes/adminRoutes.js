@@ -12,6 +12,8 @@ import {
   deleteProduct,
   getAllUsers,
   deleteUser,
+  getAdminReviews,
+  deleteReview,
   getAdminCategories,
   createCategory,
   updateCategory,
@@ -44,6 +46,8 @@ router.delete('/products/:id', deleteProduct);
 
 router.get('/users', getAllUsers);
 router.delete('/users/:id', deleteUser);
+router.get('/reviews', getAdminReviews);
+router.delete('/reviews/:id', deleteReview);
 
 router.get('/categories', getAdminCategories);
 router.post('/categories', createCategory);

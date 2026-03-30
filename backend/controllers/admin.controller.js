@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Category from '../models/Category.js';
+import Review from '../models/Review.js';
 import ShippingReturnPolicy from '../models/ShippingReturnPolicy.js';
 import ReturnRequest from '../models/ReturnRequest.js';
 import Setting from '../models/Setting.js';
@@ -345,6 +346,60 @@ export const deleteProduct = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error deleting product',
+      error: error.message,
+    });
+  }
+};
+
+export const getAdminReviews = async (req, res) => {
+  try {
+    const { productId, status, search } = req.query;
+    const query = {};
+
+    if (productId) query.productId = String(productId).trim();
+    if (status) query.status = String(status).trim().toLowerCase();
+    if (search && String(search).trim()) {
+      const term = String(search).trim();
+      query.$or = [
+        { title: { $regex: term, $options: 'i' } },
+        { comment: { $regex: term, $options: 'i' } },
+        { userName: { $regex: term, $options: 'i' } },
+        { userEmail: { $regex: term, $options: 'i' } },
+      ];
+    }
+
+    const reviews = await Review.find(query).sort({ createdAt: -1 }).limit(300).lean();
+
+    res.status(200).json({
+      success: true,
+      data: { reviews },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching reviews',
+      error: error.message,
+    });
+  }
+};
+
+export const deleteReview = async (req, res) => {
+  try {
+    const review = await Review.findByIdAndDelete(req.params.id);
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: 'Review not found',
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: 'Review deleted successfully',
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting review',
       error: error.message,
     });
   }

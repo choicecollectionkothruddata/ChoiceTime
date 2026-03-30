@@ -309,6 +309,12 @@ export const adminAPI = {
   getUsers: async () => apiRequest('/admin/users'),
   deleteUser: async (userId) =>
     apiRequest(`/admin/users/${userId}`, { method: 'DELETE' }),
+  getReviews: async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiRequest(`/admin/reviews${query ? `?${query}` : ''}`);
+  },
+  deleteReview: async (id) =>
+    apiRequest(`/admin/reviews/${id}`, { method: 'DELETE' }),
   getCategories: async () => apiRequest('/admin/categories'),
   createCategory: async (payload) =>
     apiRequest('/admin/categories', {

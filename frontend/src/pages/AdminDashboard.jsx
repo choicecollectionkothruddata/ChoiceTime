@@ -89,6 +89,12 @@ const IconReturnOrders = (props) => (
   </svg>
 );
 
+const IconReviews = (props) => (
+  <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+  </svg>
+);
+
 // Sidebar menu items
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: IconDashboard },
@@ -101,6 +107,7 @@ const menuItems = [
   { id: 'coupons', label: 'Coupons', icon: IconCoupon },
   { id: 'shipping-returns', label: 'Shipping & Returns', icon: IconShippingReturns },
   { id: 'return-orders', label: 'Return Order Management', icon: IconReturnOrders },
+  { id: 'reviews', label: 'Review Management', icon: IconReviews },
   { id: 'users', label: 'Manage Users', icon: IconUsers },
 ];
 
@@ -110,6 +117,7 @@ const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [productCategory, setProductCategory] = useState('men');
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
@@ -226,6 +234,10 @@ const AdminDashboard = () => {
   const [returnRequests, setReturnRequests] = useState([]);
   const [returnUpdatingId, setReturnUpdatingId] = useState(null);
   const [returnAdminNotes, setReturnAdminNotes] = useState({});
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [reviewSearchQuery, setReviewSearchQuery] = useState('');
+  const [reviewRatingFilter, setReviewRatingFilter] = useState('all');
+  const [reviewSortBy, setReviewSortBy] = useState('newest');
 
   // Manage Orders: selected order for detail view (modal)
   const [selectedOrderDetail, setSelectedOrderDetail] = useState(null);
@@ -305,6 +317,9 @@ const AdminDashboard = () => {
     }
     if (activeSection === 'return-orders') {
       fetchReturnRequests();
+    }
+    if (activeSection === 'reviews') {
+      fetchAdminReviews();
     }
   }, [isAdmin, activeSection, productCategory]);
 
@@ -397,6 +412,24 @@ const AdminDashboard = () => {
       console.error('Error fetching return requests:', e);
       setMessage({ type: 'error', text: e?.message || 'Failed to fetch return requests' });
       setReturnRequests([]);
+    }
+  };
+
+  const fetchAdminReviews = async () => {
+    try {
+      setLoadingReviews(true);
+      const response = await adminAPI.getReviews();
+      if (response?.success) {
+        setReviews(response.data?.reviews || []);
+      } else {
+        setReviews([]);
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      setMessage({ type: 'error', text: error.message || 'Failed to fetch reviews' });
+      setReviews([]);
+    } finally {
+      setLoadingReviews(false);
     }
   };
 
@@ -997,6 +1030,17 @@ const AdminDashboard = () => {
       fetchUsers();
     } catch (error) {
       setMessage({ type: 'error', text: error.message || 'Failed to delete user' });
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm('Delete this review? This action cannot be undone.')) return;
+    try {
+      await adminAPI.deleteReview(reviewId);
+      setReviews((prev) => (prev || []).filter((review) => review._id !== reviewId));
+      setMessage({ type: 'success', text: 'Review deleted successfully' });
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message || 'Failed to delete review' });
     }
   };
 
@@ -3859,6 +3903,166 @@ const AdminDashboard = () => {
             )}
           </div>
         );
+
+      case 'reviews': {
+        const q = (reviewSearchQuery || '').trim().toLowerCase();
+        const filteredReviews = (reviews || [])
+          .filter((review) => {
+            if (!q) return true;
+            const title = (review.title || '').toLowerCase();
+            const comment = (review.comment || '').toLowerCase();
+            const userName = (review.userName || '').toLowerCase();
+            const userEmail = (review.userEmail || '').toLowerCase();
+            const productId = String(review.productId || '').toLowerCase();
+            return (
+              title.includes(q) ||
+              comment.includes(q) ||
+              userName.includes(q) ||
+              userEmail.includes(q) ||
+              productId.includes(q)
+            );
+          })
+          .filter((review) => (
+            reviewRatingFilter === 'all'
+              ? true
+              : Number(review.rating || 0) === Number(reviewRatingFilter)
+          ))
+          .sort((a, b) => {
+            if (reviewSortBy === 'oldest') {
+              return new Date(a.createdAt) - new Date(b.createdAt);
+            }
+            if (reviewSortBy === 'highest') {
+              return Number(b.rating || 0) - Number(a.rating || 0);
+            }
+            if (reviewSortBy === 'lowest') {
+              return Number(a.rating || 0) - Number(b.rating || 0);
+            }
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          });
+
+        const hasReviewFilters =
+          q ||
+          reviewRatingFilter !== 'all' ||
+          reviewSortBy !== 'newest';
+
+        return (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Review Management</h2>
+              <button
+                type="button"
+                onClick={fetchAdminReviews}
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 rounded-lg"
+              >
+                Refresh
+              </button>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                <div className="relative flex-1 max-w-md">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                  </span>
+                  <input
+                    type="text"
+                    value={reviewSearchQuery}
+                    onChange={(e) => setReviewSearchQuery(e.target.value)}
+                    placeholder="Search by user, title, comment, product ID..."
+                    className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                {hasReviewFilters && (
+                  <span className="text-sm text-gray-500">
+                    {filteredReviews.length} of {(reviews || []).length} reviews
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <select
+                  value={reviewRatingFilter}
+                  onChange={(e) => setReviewRatingFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">Rating: All</option>
+                  <option value="5">Rating: 5★</option>
+                  <option value="4">Rating: 4★</option>
+                  <option value="3">Rating: 3★</option>
+                  <option value="2">Rating: 2★</option>
+                  <option value="1">Rating: 1★</option>
+                </select>
+                <select
+                  value={reviewSortBy}
+                  onChange={(e) => setReviewSortBy(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="newest">Sort by: Newest</option>
+                  <option value="oldest">Sort by: Oldest</option>
+                  <option value="highest">Sort by: Highest Rating</option>
+                  <option value="lowest">Sort by: Lowest Rating</option>
+                </select>
+              </div>
+            </div>
+
+            {loadingReviews ? (
+              <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
+                <p className="text-gray-500 text-sm">Loading reviews...</p>
+              </div>
+            ) : filteredReviews.length === 0 ? (
+              <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
+                <p className="text-gray-500 text-sm">No reviews found</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">User</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Product ID</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rating</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Review</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredReviews.map((review) => (
+                      <tr key={review._id} className="hover:bg-gray-50/50">
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          <div className="font-medium text-gray-900">{review.userName || 'Anonymous'}</div>
+                          <div className="text-xs text-gray-500">{review.userEmail || 'N/A'}</div>
+                        </td>
+                        <td className="px-4 py-3 text-xs font-mono text-gray-600">{review.productId || '—'}</td>
+                        <td className="px-4 py-3 text-sm font-semibold text-gray-900">{review.rating || 0}/5</td>
+                        <td className="px-4 py-3 text-sm text-gray-700 max-w-md">
+                          <div className="font-medium text-gray-900">{review.title || 'No title'}</div>
+                          <div className="text-xs text-gray-600 mt-1 line-clamp-2">{review.comment || '—'}</div>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
+                          {new Date(review.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteReview(review._id)}
+                            className="px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded hover:bg-red-700"
+                          >
+                            Delete Review
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        );
+      }
 
       case 'users':
         return (

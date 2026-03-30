@@ -22,6 +22,8 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedBoxType, setSelectedBoxType] = useState('');
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [loadingRelatedProducts, setLoadingRelatedProducts] = useState(false);
 
   // Review states
   const [reviews, setReviews] = useState([]);
@@ -40,6 +42,18 @@ const ProductDetail = () => {
 
   const [shippingPolicies, setShippingPolicies] = useState([]);
   const [loadingShippingPolicies, setLoadingShippingPolicies] = useState(false);
+
+  const normalizeCategory = (rawCategory) => {
+    const categoryMap = {
+      'watches': 'watches', 'watch': 'watches',
+      'lens': 'lens', 'lenses': 'lens',
+      'accessories': 'accessories', 'accessory': 'accessories',
+      'men': 'men', 'mens': 'men',
+      'women': 'women', 'womens': 'women',
+      'fashion': 'men',
+    };
+    return categoryMap[String(rawCategory || '').toLowerCase().trim()] || String(rawCategory || '').toLowerCase().trim();
+  };
 
   useEffect(() => {
     fetchProduct();
@@ -72,20 +86,11 @@ const ProductDetail = () => {
     setLoading(true);
     try {
       const validCategories = ['men', 'women', 'watches', 'lens', 'accessories'];
-      const categoryMap = {
-        'watches': 'watches', 'watch': 'watches',
-        'lens': 'lens', 'lenses': 'lens',
-        'accessories': 'accessories',
-        'men': 'men', 'mens': 'men',
-        'women': 'women', 'womens': 'women',
-        'fashion': 'men',
-      };
-
       let foundData = null;
 
       // Try to fetch with the provided category first
       if (category && category !== 'undefined') {
-        const apiCategory = categoryMap[category] || category;
+        const apiCategory = normalizeCategory(category);
         try {
           // Use the appropriate API method based on category
           switch (apiCategory) {
@@ -145,23 +150,51 @@ const ProductDetail = () => {
       }
 
       if (foundData && foundData.success) {
-        setProduct(foundData.data.product);
-        if (foundData.data.product.sizes?.length > 0) setSelectedSize(foundData.data.product.sizes[0]);
-        if (foundData.data.product.colorOptions?.length > 0) setSelectedColor(foundData.data.product.colorOptions[0]);
-        else if (foundData.data.product.colors?.length > 0) setSelectedColor(foundData.data.product.colors[0]);
-        if (foundData.data.product.boxOptions?.length > 0) {
-          const firstBox = foundData.data.product.boxOptions[0];
+        const loadedProduct = foundData.data.product;
+        setProduct(loadedProduct);
+        if (loadedProduct.sizes?.length > 0) setSelectedSize(loadedProduct.sizes[0]);
+        if (loadedProduct.colorOptions?.length > 0) setSelectedColor(loadedProduct.colorOptions[0]);
+        else if (loadedProduct.colors?.length > 0) setSelectedColor(loadedProduct.colors[0]);
+        if (loadedProduct.boxOptions?.length > 0) {
+          const firstBox = loadedProduct.boxOptions[0];
           setSelectedBoxType(typeof firstBox === 'string' ? firstBox : firstBox.name);
         }
-        fetchReviews(foundData.data.product);
+        fetchReviews(loadedProduct);
+        fetchRelatedProducts(loadedProduct);
       } else {
         throw new Error('Product not found in any category');
       }
     } catch (error) {
       console.error('Error fetching product:', error);
       setProduct(null);
+      setRelatedProducts([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRelatedProducts = async (currentProduct) => {
+    if (!currentProduct) return;
+    const currentProductId = String(currentProduct._id || currentProduct.id || '');
+    const normalizedCategory = normalizeCategory(currentProduct.category || category);
+    if (!normalizedCategory) return setRelatedProducts([]);
+
+    setLoadingRelatedProducts(true);
+    try {
+      const response = await productAPI.getProducts(normalizedCategory, { limit: 12 });
+      if (response?.success) {
+        const filtered = (response.data?.products || [])
+          .filter((item) => String(item._id || item.id) !== currentProductId)
+          .slice(0, 8);
+        setRelatedProducts(filtered);
+      } else {
+        setRelatedProducts([]);
+      }
+    } catch (error) {
+      console.error('Error fetching related products:', error);
+      setRelatedProducts([]);
+    } finally {
+      setLoadingRelatedProducts(false);
     }
   };
 
@@ -966,6 +999,29 @@ const ProductDetail = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Related Products Section */}
+          <div className="mt-10 sm:mt-14 pt-8 border-t border-gray-200">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">You may also like</h3>
+            </div>
+
+            {loadingRelatedProducts ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+                {[1, 2, 3, 4].map((item) => (
+                  <div key={item} className="animate-pulse bg-gray-100 rounded-xl h-72" />
+                ))}
+              </div>
+            ) : relatedProducts.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+                {relatedProducts.map((relatedProduct) => (
+                  <ProductCard key={relatedProduct._id || relatedProduct.id} product={relatedProduct} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No related products available in this category right now.</p>
+            )}
           </div>
 
           {/* Reviews Section */}

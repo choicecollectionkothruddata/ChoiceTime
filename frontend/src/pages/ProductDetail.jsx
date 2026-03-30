@@ -526,7 +526,7 @@ const ProductDetail = () => {
 
               {/* Horizontal Thumbnails - mobile only */}
               {productImages.length > 1 && (
-                <div className="sm:hidden mb-3 w-full max-w-full overflow-hidden">
+                <div className="sm:hidden mb-3 w-full max-w-xs mx-auto overflow-hidden">
                   <div
                     className="flex flex-nowrap gap-1.5 overflow-x-auto pb-1 touch-pan-x"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}

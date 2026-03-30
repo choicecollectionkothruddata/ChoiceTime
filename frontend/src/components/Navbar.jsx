@@ -286,19 +286,21 @@ const Navbar = () => {
         </nav>
 
         {/* ========== SECONDARY NAVBAR - DESKTOP (Categories – only category name, click = go to category) ========== */}
-        <nav className="hidden md:block bg-brown-50/90 border-b border-brown-200 backdrop-blur-sm">
-          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12">
-            <div className="flex items-center justify-center gap-1 lg:gap-2 py-1 lg:py-1.5">
+        <nav className="hidden md:block bg-brown-50/90 border-b border-brown-200 backdrop-blur-sm min-w-0">
+          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 min-w-0">
+            <div className="overflow-x-auto overflow-y-hidden scrollbar-hide touch-pan-x py-1 lg:py-1.5 -mx-1 px-1">
+              <div className="flex flex-nowrap items-center justify-center gap-1 lg:gap-2 w-max mx-auto">
               {navLinks.map((link) => (
                 <Link
                   key={link.id}
                   to={link.path}
-                  className={`inline-flex items-center px-2 lg:px-3 py-1 lg:py-1.5 text-xs font-semibold uppercase tracking-wider rounded-md transition-all
+                  className={`flex-shrink-0 inline-flex items-center px-2 lg:px-3 py-1 lg:py-1.5 text-xs font-semibold uppercase tracking-wider rounded-md transition-all whitespace-nowrap
                   ${activeCategory === link.id ? 'text-black bg-white shadow-sm' : 'text-gray-600 hover:text-black hover:bg-white/60'}`}
                 >
                   {link.label}
                 </Link>
               ))}
+              </div>
             </div>
           </div>
         </nav>

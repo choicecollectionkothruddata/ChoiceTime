@@ -351,8 +351,8 @@ const CategoryPage = () => {
         </div>
       )}
 
-      {/* Right Content - Scrollable */}
-      <div id="product-scroll-area" className="flex-1 md:overflow-y-auto">
+      {/* Right Content - Scrollable (min-w-0 so nested horizontal scroll works in flex row on desktop) */}
+      <div id="product-scroll-area" className="flex-1 min-w-0 md:overflow-y-auto">
         <div className="p-4 sm:p-6 lg:p-8">
           {/* Header with Title, Count, Filter Toggle */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
@@ -381,8 +381,8 @@ const CategoryPage = () => {
 
           {/* Subcategory Strip */}
           {categoryStrip && (
-            <div className="mb-6">
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="mb-6 min-w-0 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-nowrap gap-3 overflow-x-auto overflow-y-hidden pb-2 scrollbar-hide touch-pan-x">
                 <Link
                   to={categoryStrip.path}
                   className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all whitespace-nowrap

@@ -87,13 +87,16 @@ const TrendingReels = () => {
   if (!ready || reels.length === 0) return null;
 
   return (
-    <section className="py-10 md:py-16 bg-brown-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-8 md:mb-10">
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900 uppercase tracking-widest">
+    <section className="pt-4 md:pt-6 pb-10 md:pb-16 bg-brown-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-8 md:mb-11">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 uppercase tracking-widest">
             Trending Reels
           </h2>
-          <div className="mt-2 mx-auto w-12 h-0.5 bg-gray-800 rounded-full"></div>
+          <p className="mt-2 text-sm md:text-base text-gray-600">
+            Explore trending picks for every style
+          </p>
+          <div className="mt-3 mx-auto w-14 h-0.5 bg-gray-800 rounded-full"></div>
         </div>
 
         <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">

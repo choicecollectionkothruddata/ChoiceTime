@@ -294,8 +294,8 @@ const Navbar = () => {
                 <Link
                   key={link.id}
                   to={link.path}
-                  className={`flex-shrink-0 inline-flex items-center px-2 lg:px-3 py-1 lg:py-1.5 text-xs font-semibold uppercase tracking-wider rounded-md transition-all whitespace-nowrap
-                  ${activeCategory === link.id ? 'text-black bg-white shadow-sm' : 'text-gray-600 hover:text-black hover:bg-white/60'}`}
+                  className={`flex-shrink-0 inline-flex items-center px-2 lg:px-2.5 py-0.5 lg:py-1 text-[11px] font-semibold uppercase tracking-wider rounded-md border transition-all whitespace-nowrap
+                  ${activeCategory === link.id ? 'text-black bg-white border-gray-400 shadow-sm' : 'text-gray-600 border-gray-300 hover:text-black hover:bg-white/60 hover:border-gray-400'}`}
                 >
                   {link.label}
                 </Link>
@@ -312,8 +312,8 @@ const Navbar = () => {
               <Link
                 to="/"
                 onClick={scrollToTop}
-                className={`flex-shrink-0 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide rounded-full transition-all
-                ${activeCategory === 'home' ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}`}
+                className={`flex-shrink-0 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide rounded-md border transition-all
+                ${activeCategory === 'home' ? 'bg-black text-white border-black' : 'bg-gray-100 text-gray-600 border-gray-300'}`}
               >
                 Home
               </Link>
@@ -321,8 +321,8 @@ const Navbar = () => {
                 <Link
                   key={link.id}
                   to={link.path}
-                  className={`flex-shrink-0 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide rounded-full transition-all
-                  ${activeCategory === link.id ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}`}
+                  className={`flex-shrink-0 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide rounded-md border transition-all
+                  ${activeCategory === link.id ? 'bg-black text-white border-black' : 'bg-gray-100 text-gray-600 border-gray-300'}`}
                 >
                   {link.label}
                 </Link>

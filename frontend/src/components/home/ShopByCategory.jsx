@@ -11,10 +11,10 @@ const categories = [
     path: '/womens-watches', 
     image: 'https://res.cloudinary.com/daxdjob49/image/upload/v1770666728/19fe40b9-8c6c-4fbe-aed4-9341c931600e.png'
   },
-  { 
-    label: "Men's Wallet", 
-    path: '/mens-wallet', 
-    image: 'https://res.cloudinary.com/daxdjob49/image/upload/v1770666845/779f9291-423b-4889-90ba-ee7dc5631aa2.png'
+  {
+    label: 'Sunglasses',
+    path: '/sunglasses',
+    image: 'https://res.cloudinary.com/daxdjob49/image/upload/v1774959710/4b3584ae-244b-4122-bb83-538c93803260.png'
   },
   { 
     label: "Men's Belt", 
@@ -35,26 +35,28 @@ const categories = [
 
 const ShopByCategory = () => {
   return (
-    <section className="pt-10 md:pt-16 pb-4 md:pb-6 bg-brown-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+    <section className="pt-12 md:pt-16 pb-3 md:pb-5 bg-brown-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Section Header */}
-        <div className="text-center mb-8 md:mb-10">
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900 uppercase tracking-widest">
+        <div className="text-center mb-8 md:mb-11">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 uppercase tracking-widest">
             Shop By Category
           </h2>
-          <div className="mt-2 mx-auto w-12 h-0.5 bg-gray-800 rounded-full"></div>
+          <p className="mt-2 text-sm md:text-base text-gray-600">
+            Explore trending picks for every style
+          </p>
+          <div className="mt-3 mx-auto w-14 h-0.5 bg-gray-800 rounded-full"></div>
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5 md:gap-6">
           {categories.map((cat, idx) => (
             <Link
               key={cat.path}
               to={cat.path}
               className="group flex flex-col items-center text-center"
             >
-              {/* Square Image */}
-              <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-white shadow-sm group-hover:shadow-xl transition-all duration-400 group-hover:-translate-y-1">
+              <div className="relative w-full max-w-[180px] aspect-[4/4.6] rounded-2xl overflow-hidden bg-white ring-1 ring-gray-200 shadow-md group-hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1">
                 <img
                   src={cat.image}
                   alt={cat.label}
@@ -63,12 +65,10 @@ const ShopByCategory = () => {
                   fetchPriority={idx < 2 ? 'high' : 'auto'}
                   decoding="async"
                 />
-                {/* Subtle overlay on hover */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
               
-              {/* Category Name */}
-              <h3 className="mt-2.5 md:mt-3 text-[11px] sm:text-xs md:text-sm font-semibold text-gray-700 group-hover:text-gray-900 transition-colors leading-tight tracking-wide">
+              <h3 className="mt-3 text-xs sm:text-sm md:text-base font-semibold text-gray-700 group-hover:text-gray-900 transition-colors leading-tight tracking-wide">
                 {cat.label}
               </h3>
             </Link>

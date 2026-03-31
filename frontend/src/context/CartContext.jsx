@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { cartAPI } from '../utils/api';
 import { useAuth } from './AuthContext';
 
@@ -116,6 +116,19 @@ export const CartProvider = ({ children }) => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
+  /** True if any cart line references this product (by id). */
+  const isProductInCart = useCallback(
+    (productId) => {
+      if (!productId || !Array.isArray(cart)) return false;
+      return cart.some((item) => {
+        const cartProduct = item.product || item;
+        const cartProductId = cartProduct?._id || cartProduct?.id || item.productId;
+        return String(cartProductId) === String(productId);
+      });
+    },
+    [cart]
+  );
+
   return (
     <CartContext.Provider
       value={{
@@ -126,6 +139,7 @@ export const CartProvider = ({ children }) => {
         clearCart,
         getCartTotal,
         getCartItemsCount,
+        isProductInCart,
         isLoading,
         loadCart,
       }}

@@ -7,7 +7,7 @@ import { useToast } from '../components/ToastContainer';
 import { Link } from 'react-router-dom';
 
 const ProductQuickView = ({ product, isOpen, onClose }) => {
-  const { addToCart } = useCart();
+  const { addToCart, isProductInCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { isAuthenticated } = useAuth();
   const { success, error: showError } = useToast();
@@ -32,6 +32,9 @@ const ProductQuickView = ({ product, isOpen, onClose }) => {
 
   if (!isOpen || !product) return null;
 
+  const quickViewProductId = product._id || product.id;
+  const alreadyInCart = isProductInCart(quickViewProductId);
+
   // Get box price for the selected box type
   const getQuickViewBoxPrice = () => {
     if (!selectedBoxType || !product?.boxOptions?.length) return 0;
@@ -43,6 +46,7 @@ const ProductQuickView = ({ product, isOpen, onClose }) => {
   };
 
   const handleAddToCart = async () => {
+    if (alreadyInCart) return;
     try {
       await addToCart(product, quantity, selectedSize, selectedColor, selectedBoxType, getQuickViewBoxPrice());
       success('Product added to cart');
@@ -231,10 +235,15 @@ const ProductQuickView = ({ product, isOpen, onClose }) => {
                 <div className="flex gap-3">
                   <button
                     onClick={handleAddToCart}
-                    className="flex-1 bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 flex items-center justify-center gap-2"
+                    disabled={alreadyInCart}
+                    className={`flex-1 px-6 py-3 rounded-lg flex items-center justify-center gap-2 ${
+                      alreadyInCart
+                        ? 'bg-green-100 text-green-800 border border-green-200 cursor-not-allowed'
+                        : 'bg-gray-900 text-white hover:bg-gray-800'
+                    }`}
                   >
                     <ShoppingCart className="w-5 h-5" />
-                    Add to Cart
+                    {alreadyInCart ? 'Already in Cart' : 'Add to Cart'}
                   </button>
                   <button
                     onClick={handleWishlistToggle}

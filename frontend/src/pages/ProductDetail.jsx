@@ -11,7 +11,7 @@ import { productAPI, reviewAPI, shippingReturnAPI } from '../utils/api';
 const ProductDetail = () => {
   const { id, category } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, isProductInCart } = useCart();
   const { isAuthenticated } = useAuth();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
@@ -355,6 +355,8 @@ const ProductDetail = () => {
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) return setShowLoginModal(true);
+    const pid = product?._id || product?.id;
+    if (pid && isProductInCart(pid)) return;
     try {
       await addToCart(product, 1, selectedSize, selectedColor, selectedBoxType, selectedBoxPrice);
       setCartSuccessPopup(true);
@@ -390,6 +392,7 @@ const ProductDetail = () => {
   const productImages = product.images || [product.image || product.thumbnail];
   const finalPrice = product.price || product.finalPrice;
   const originalPrice = product.originalPrice || product.mrp || 0;
+  const alreadyInCart = isProductInCart(product._id || product.id);
 
   // Split product name for highlighting
   const nameWords = product.name.split(' ');
@@ -734,12 +737,28 @@ const ProductDetail = () => {
                   )}
                   <button
                     onClick={handleAddToCart}
-                    className="w-full flex items-center justify-center gap-1.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all shadow-md hover:shadow-lg active:scale-[0.98] text-xs sm:text-sm"
+                    disabled={alreadyInCart}
+                    className={`w-full flex items-center justify-center gap-1.5 font-semibold px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all shadow-md active:scale-[0.98] text-xs sm:text-sm ${
+                      alreadyInCart
+                        ? 'bg-green-100 text-green-800 border border-green-200 cursor-not-allowed shadow-none'
+                        : 'bg-gray-900 hover:bg-gray-800 text-white hover:shadow-lg'
+                    }`}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <span>Add to Cart</span>
+                    {alreadyInCart ? (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Already in Cart</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span>Add to Cart</span>
+                      </>
+                    )}
                   </button>
                 </div>
                 <button
@@ -749,20 +768,6 @@ const ProductDetail = () => {
                   <span>Buy Now</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </button>
-                <button
-                  onClick={handleShareProduct}
-                  className="group relative flex items-center justify-center w-10 sm:w-11 rounded-lg border bg-white border-gray-200 hover:border-gray-800 hover:bg-gray-50 transition-all duration-200 active:scale-[0.92]"
-                  aria-label="Share product"
-                >
-                  {shareCopied && (
-                    <span className="absolute -top-9 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs font-medium px-2.5 py-1 rounded-lg whitespace-nowrap shadow-lg">
-                      Link copied!
-                    </span>
-                  )}
-                  <svg className="w-5 h-5 text-gray-400 group-hover:text-gray-800 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                   </svg>
                 </button>
               </div>

@@ -7,7 +7,7 @@ import LoginModal from './LoginModal';
 import { handleImageError } from '../utils/imageFallback';
 
 const ProductCard = ({ product }) => {
-  const { addToCart } = useCart();
+  const { addToCart, isProductInCart } = useCart();
   const { isAuthenticated } = useAuth();
   const { toggleWishlist, isInWishlist } = useWishlist();
   
@@ -56,6 +56,7 @@ const ProductCard = ({ product }) => {
   const originalPrice = product.originalPrice || product.mrp || 0;
   const hasDiscount = originalPrice > 0 && originalPrice > finalPrice && finalPrice > 0;
   const productId = product._id || product.id;
+  const isAlreadyInCart = isProductInCart(productId);
   
   // Get the image source with fallback
   // For lenses, use the 2nd image (index 1) as default if available
@@ -83,6 +84,7 @@ const ProductCard = ({ product }) => {
   const handleAddClick = (e) => {
     e.preventDefault();
     e.stopPropagation(); 
+    if (isAlreadyInCart) return;
     if (sizes.length > 0) {
       setShowSizes(true);
     } else {
@@ -273,9 +275,14 @@ const ProductCard = ({ product }) => {
           {!showSizes ? (
             <button
               onClick={handleAddClick}
-              className="w-full py-2.5 bg-black text-white text-xs font-bold uppercase tracking-wide rounded-lg hover:bg-gray-800 transition-colors"
+              disabled={isAlreadyInCart}
+              className={`w-full py-2.5 text-xs font-bold uppercase tracking-wide rounded-lg transition-colors ${
+                isAlreadyInCart
+                  ? 'bg-green-100 text-green-800 border border-green-200 cursor-not-allowed'
+                  : 'bg-black text-white hover:bg-gray-800'
+              }`}
             >
-              {sizes.length > 0 ? 'Select Size' : 'Add to Cart'}
+              {isAlreadyInCart ? 'Already in Cart' : (sizes.length > 0 ? 'Select Size' : 'Add to Cart')}
             </button>
           ) : (
             <div className="bg-gray-100 rounded-lg p-3">

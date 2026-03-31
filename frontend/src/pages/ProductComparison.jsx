@@ -5,7 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useToast } from '../components/ToastContainer';
 
 const ProductComparison = () => {
-  const { addToCart } = useCart();
+  const { addToCart, isProductInCart } = useCart();
   const { success, error: showError } = useToast();
   const [products, setProducts] = useState([]);
 
@@ -32,6 +32,8 @@ const ProductComparison = () => {
   };
 
   const handleAddToCart = async (product) => {
+    const pid = product._id || product.id;
+    if (pid && isProductInCart(pid)) return;
     try {
       await addToCart(product, 1);
       success('Product added to cart');
@@ -169,16 +171,25 @@ const ProductComparison = () => {
               </tr>
               <tr>
                 <td className="px-4 py-3 text-sm font-medium text-gray-900">Actions</td>
-                {products.map((product) => (
-                  <td key={product._id || product.id} className="px-4 py-3">
+                {products.map((product) => {
+                  const pid = product._id || product.id;
+                  const inCart = isProductInCart(pid);
+                  return (
+                  <td key={pid} className="px-4 py-3">
                     <button
                       onClick={() => handleAddToCart(product)}
-                      className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800"
+                      disabled={inCart}
+                      className={`px-4 py-2 text-sm rounded-lg ${
+                        inCart
+                          ? 'bg-green-100 text-green-800 border border-green-200 cursor-not-allowed'
+                          : 'bg-gray-900 text-white hover:bg-gray-800'
+                      }`}
                     >
-                      Add to Cart
+                      {inCart ? 'Already in Cart' : 'Add to Cart'}
                     </button>
                   </td>
-                ))}
+                  );
+                })}
               </tr>
             </tbody>
           </table>

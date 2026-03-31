@@ -53,11 +53,11 @@ const CategoryTopSellingSections = () => {
               </Link>
             </div>
 
-            <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
+            <div className="grid grid-rows-2 grid-flow-col gap-3 sm:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-1 px-1 sm:flex">
               {section.products.map((product) => (
                 <div
                   key={product._id || product.id}
-                  className="flex-shrink-0 w-[160px] sm:w-[180px] md:w-[200px] snap-start"
+                  className="w-[160px] sm:w-[180px] md:w-[200px] snap-start sm:flex-shrink-0"
                 >
                   <ProductCard product={product} />
                 </div>

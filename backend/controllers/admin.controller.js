@@ -442,7 +442,7 @@ export const getAdminCategories = async (req, res) => {
 
 export const createCategory = async (req, res) => {
   try {
-    const { name, slug: slugInput, subItems } = req.body;
+    const { name, slug: slugInput, subItems, order } = req.body;
     if (!(name && (name || '').trim())) {
       return res.status(400).json({
         success: false,
@@ -458,7 +458,7 @@ export const createCategory = async (req, res) => {
       name: (name || '').trim(),
       slug: slugNorm,
       path,
-      order: await Category.countDocuments(),
+      order: Number.isFinite(Number(order)) ? Number(order) : await Category.countDocuments(),
       subItems: normalizedSubItems,
     });
     res.status(201).json({
@@ -483,7 +483,7 @@ export const createCategory = async (req, res) => {
 
 export const updateCategory = async (req, res) => {
   try {
-    const { name, slug: slugInput, subItems } = req.body;
+    const { name, slug: slugInput, subItems, order } = req.body;
     const category = await Category.findById(req.params.id);
     if (!category) {
       return res.status(404).json({
@@ -499,6 +499,9 @@ export const updateCategory = async (req, res) => {
     category.path = `/${category.slug}`;
     if (Array.isArray(subItems)) {
       category.subItems = normalizeSubItems(subItems, category.slug);
+    }
+    if (order !== undefined && Number.isFinite(Number(order))) {
+      category.order = Number(order);
     }
     await category.save();
     res.status(200).json({

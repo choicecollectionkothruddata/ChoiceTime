@@ -167,7 +167,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [navCategories, setNavCategories] = useState([]);
-  const [categoryForm, setCategoryForm] = useState({ name: '' });
+  const [categoryForm, setCategoryForm] = useState({ name: '', order: 0 });
   const [editingCategory, setEditingCategory] = useState(null);
   const [subItemInputs, setSubItemInputs] = useState([{ name: '' }]);
   
@@ -929,7 +929,7 @@ const AdminDashboard = () => {
   };
 
   const resetCategoryForm = () => {
-    setCategoryForm({ name: '' });
+    setCategoryForm({ name: '', order: 0 });
     setSubItemInputs([{ name: '' }]);
     setEditingCategory(null);
   };
@@ -1006,6 +1006,7 @@ const AdminDashboard = () => {
     try {
       await adminAPI.createCategory({
         name: (categoryForm.name || '').trim(),
+        order: Number(categoryForm.order) || 0,
         subItems,
       });
       setMessage({ type: 'success', text: 'Category added' });
@@ -1018,7 +1019,7 @@ const AdminDashboard = () => {
 
   const handleEditCategory = (cat) => {
     setEditingCategory(cat);
-    setCategoryForm({ name: cat.name });
+    setCategoryForm({ name: cat.name, order: cat.order ?? 0 });
     setSubItemInputs(
       (cat.subItems && cat.subItems.length)
         ? cat.subItems.map((s) => ({ name: s.name }))
@@ -1036,6 +1037,7 @@ const AdminDashboard = () => {
     try {
       await adminAPI.updateCategory(editingCategory._id, {
         name: (categoryForm.name || '').trim(),
+        order: Number(categoryForm.order) || 0,
         subItems,
       });
       setMessage({ type: 'success', text: 'Category updated' });
@@ -3400,17 +3402,33 @@ const AdminDashboard = () => {
             <div className="bg-white rounded-xl border p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">{editingCategory ? 'Edit Category' : 'Add Category'}</h3>
               <form onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category name</label>
-                  <input
-                    name="name"
-                    value={categoryForm.name}
-                    onChange={handleCategoryFormChange}
-                    required
-                    className="w-full border rounded-lg px-3 py-2 text-sm max-w-md"
-                    placeholder="e.g. Men's Watches"
-                  />
-                  <p className="text-xs text-gray-500 mt-0.5">URL slug is generated automatically from the name.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category name</label>
+                    <input
+                      name="name"
+                      value={categoryForm.name}
+                      onChange={handleCategoryFormChange}
+                      required
+                      className="w-full border rounded-lg px-3 py-2 text-sm"
+                      placeholder="e.g. Men's Watches"
+                    />
+                    <p className="text-xs text-gray-500 mt-0.5">URL slug is generated automatically from the name.</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Position No.</label>
+                    <input
+                      type="number"
+                      name="order"
+                      value={categoryForm.order}
+                      onChange={handleCategoryFormChange}
+                      min={0}
+                      step={1}
+                      className="w-full border rounded-lg px-3 py-2 text-sm"
+                      placeholder="0, 1, 2..."
+                    />
+                    <p className="text-xs text-gray-500 mt-0.5">Lower number appears first in navigation.</p>
+                  </div>
                 </div>
 
                 <div>
@@ -3459,7 +3477,7 @@ const AdminDashboard = () => {
                   {navCategories.map((cat) => (
                     <li key={cat._id} className="flex flex-wrap items-center justify-between gap-2 py-3 border-b border-gray-100 last:border-0">
                       <div>
-                        <p className="font-medium text-gray-900">{cat.name}</p>
+                        <p className="font-medium text-gray-900">#{cat.order ?? 0} - {cat.name}</p>
                         <p className="text-xs text-gray-500">{cat.path}</p>
                         {cat.subItems?.length > 0 && (
                           <p className="text-xs text-gray-500 mt-1">Companies: {cat.subItems.map((s) => s.name).join(', ')}</p>

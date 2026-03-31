@@ -8,23 +8,11 @@ const MOBILE_BANNER =
 
 const HeroCarousel = () => (
   <div className="relative w-full overflow-hidden">
-    <div className="hidden md:block relative w-full">
-      <Link to="/" className="block">
+    <Link to="/" className="block">
+      <picture>
+        <source media="(max-width: 767px)" srcSet={MOBILE_BANNER} />
         <img
           src={DESKTOP_BANNER}
-          alt="Banner"
-          className="w-full h-auto object-contain"
-          loading="eager"
-          fetchPriority="high"
-          decoding="async"
-        />
-      </Link>
-    </div>
-
-    <div className="block md:hidden relative w-full">
-      <Link to="/" className="block">
-        <img
-          src={MOBILE_BANNER}
           alt="Banner"
           className="w-full h-auto object-cover block select-none"
           draggable={false}
@@ -32,8 +20,8 @@ const HeroCarousel = () => (
           fetchPriority="high"
           decoding="async"
         />
-      </Link>
-    </div>
+      </picture>
+    </Link>
   </div>
 );
 

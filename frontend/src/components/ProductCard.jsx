@@ -17,6 +17,7 @@ const ProductCard = ({ product }) => {
   const [showSizes, setShowSizes] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [hoverImageLoaded, setHoverImageLoaded] = useState(false);
+  const [shouldLoadHoverImage, setShouldLoadHoverImage] = useState(false);
   const [cartSuccessPopup, setCartSuccessPopup] = useState(false);
 
   // Data Normalization - support array, object { image1, image2, ... }, or single image/thumbnail
@@ -136,12 +137,13 @@ const ProductCard = ({ product }) => {
       )}
       <div 
         className="group relative w-full h-full select-none transform-gpu bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col" 
-        onMouseEnter={() => setIsHovered(true)}
+        onMouseEnter={() => {
+          setIsHovered(true);
+          if (hoverImageSrc) setShouldLoadHoverImage(true);
+        }}
         onMouseLeave={() => {
           setIsHovered(false);
-          if (window.matchMedia('(min-width: 768px)').matches) {
-            setShowSizes(false);
-          }
+          setShowSizes(false);
         }}
       >
         <Link to={`/product/${productId}`} className="flex flex-col flex-1">
@@ -194,7 +196,7 @@ const ProductCard = ({ product }) => {
             )}
 
             {/* Hover Image */}
-            {hoverImageSrc && (
+            {hoverImageSrc && shouldLoadHoverImage && (
               <>
                 <img
                   src={hoverImageSrc}
@@ -202,6 +204,7 @@ const ProductCard = ({ product }) => {
                   className="hidden"
                   onLoad={() => setHoverImageLoaded(true)}
                   decoding="async"
+                  loading="lazy"
                 />
                 <img
                   src={hoverImageSrc}
@@ -210,6 +213,8 @@ const ProductCard = ({ product }) => {
                     absolute inset-0 w-full h-full object-cover transition-opacity duration-500
                     ${isHovered && hoverImageLoaded ? 'opacity-100' : 'opacity-0'}
                   `}
+                  loading="lazy"
+                  decoding="async"
                   onError={handleImageError}
                 />
               </>

@@ -11,27 +11,72 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 
+const API_CACHE_PREFIX = 'ct_api_cache:';
+const memoryGetCache = new Map();
+
+const getCacheKey = (url) => `${API_CACHE_PREFIX}${url}`;
+
+const readGetCache = (key, ttlMs) => {
+  const now = Date.now();
+  const inMemory = memoryGetCache.get(key);
+  if (inMemory && now - inMemory.ts <= ttlMs) return inMemory.data;
+
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed.ts !== 'number') return null;
+    if (now - parsed.ts > ttlMs) {
+      sessionStorage.removeItem(key);
+      return null;
+    }
+    memoryGetCache.set(key, parsed);
+    return parsed.data;
+  } catch {
+    return null;
+  }
+};
+
+const writeGetCache = (key, data) => {
+  const payload = { ts: Date.now(), data };
+  memoryGetCache.set(key, payload);
+  try {
+    sessionStorage.setItem(key, JSON.stringify(payload));
+  } catch {
+    // Ignore storage quota/private mode failures.
+  }
+};
+
 // Helper function to make API requests
 const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('token');
+  const { cache: cacheConfig, ...requestOptions } = options;
   
   const config = {
     headers: {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
+      ...requestOptions.headers,
     },
-    ...options,
+    ...requestOptions,
   };
 
   try {
     // Ensure endpoint starts with / for proper URL construction
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const fullUrl = `${API_BASE_URL}${normalizedEndpoint}`;
+    const method = (requestOptions.method || 'GET').toUpperCase();
+    const canUseCache = method === 'GET' && cacheConfig?.ttlMs > 0;
+
+    if (canUseCache) {
+      const cacheKey = getCacheKey(fullUrl);
+      const cached = readGetCache(cacheKey, cacheConfig.ttlMs);
+      if (cached) return cached;
+    }
     
     // Debug log in development
     if (import.meta.env.DEV) {
-      console.log(`[API Request] ${options.method || 'GET'} ${fullUrl}`);
+      console.log(`[API Request] ${method} ${fullUrl}`);
     }
     
     const response = await fetch(fullUrl, config);
@@ -66,6 +111,10 @@ const apiRequest = async (endpoint, options = {}) => {
       const error = new Error(data.message || 'Something went wrong');
       error.response = { data, status: response.status };
       throw error;
+    }
+
+    if (canUseCache) {
+      writeGetCache(getCacheKey(fullUrl), data);
     }
 
     return data;
@@ -215,29 +264,29 @@ export const profileAPI = {
 
 // Categories API (public - for nav)
 export const categoriesAPI = {
-  getCategories: async () => apiRequest('/categories'),
+  getCategories: async () => apiRequest('/categories', { cache: { ttlMs: 5 * 60 * 1000 } }),
 };
 
 // Reels (public - home page trending reels; admin uses adminAPI.getReels)
 export const reelAPI = {
-  getPublicReels: async () => apiRequest('/reels'),
+  getPublicReels: async () => apiRequest('/reels', { cache: { ttlMs: 2 * 60 * 1000 } }),
 };
 
 // Product API calls (single products collection: GET /api/products?category=... & GET /api/products/:id)
 export const productAPI = {
   getProducts: async (category, params = {}) => {
     const q = new URLSearchParams({ ...params, ...(category && { category }) }).toString();
-    return apiRequest(`/products${q ? `?${q}` : ''}`);
+    return apiRequest(`/products${q ? `?${q}` : ''}`, { cache: { ttlMs: 2 * 60 * 1000 } });
   },
 
   /** Per-category sections for home: top sellers from orders, random fallback if no sales */
   getHomeTopSelling: async (params = {}) => {
     const q = new URLSearchParams(params).toString();
-    return apiRequest(`/products/home-top-selling${q ? `?${q}` : ''}`);
+    return apiRequest(`/products/home-top-selling${q ? `?${q}` : ''}`, { cache: { ttlMs: 2 * 60 * 1000 } });
   },
 
   getProductById: async (id) => {
-    return apiRequest(`/products/${id}`);
+    return apiRequest(`/products/${id}`, { cache: { ttlMs: 5 * 60 * 1000 } });
   },
 
   getWatches: async (params = {}) => productAPI.getProducts('watches', params),

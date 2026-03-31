@@ -47,7 +47,7 @@ const ShopByCategory = () => {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
-          {categories.map((cat) => (
+          {categories.map((cat, idx) => (
             <Link
               key={cat.path}
               to={cat.path}
@@ -59,8 +59,8 @@ const ShopByCategory = () => {
                   src={cat.image}
                   alt={cat.label}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  loading="eager"
-                  fetchPriority="high"
+                  loading={idx < 2 ? 'eager' : 'lazy'}
+                  fetchPriority={idx < 2 ? 'high' : 'auto'}
                   decoding="async"
                 />
                 {/* Subtle overlay on hover */}

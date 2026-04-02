@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { paymentAPI, profileAPI, orderAPI, getShippingConfig as getShippingConfigAPI } from '../utils/api';
 import { loadScript } from '../utils/razorpay';
-import { Check, Package, FileText } from 'lucide-react';
+import { Check, FileText } from 'lucide-react';
 import Invoice from '../components/Invoice';
 
 const Checkout = () => {
@@ -15,7 +15,7 @@ const Checkout = () => {
   const [savingAddress, setSavingAddress] = useState(false);
   const [error, setError] = useState('');
   const [addressSaved, setAddressSaved] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('razorpay'); // 'razorpay' or 'COD'
+  const [paymentMethod, setPaymentMethod] = useState('razorpay'); // only online payment
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false); // Prevent cart redirect during order placement
   const [isProcessingOrder, setIsProcessingOrder] = useState(false); // Show processing state
@@ -184,69 +184,6 @@ const Checkout = () => {
       } catch (saveErr) {
         console.error('Error auto-saving address:', saveErr);
         // Continue with payment even if address save fails
-      }
-
-      // Handle Cash on Delivery
-      if (paymentMethod === 'COD') {
-        // Set flag to prevent cart redirect
-        setIsPlacingOrder(true);
-        setIsProcessingOrder(true);
-        setLoading(true);
-        setProcessingStep(0);
-
-        // Step 1: Validating order details (~0.5s)
-        setProcessingStep(1);
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Step 2: Processing payment method (~0.5s)
-        setProcessingStep(2);
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Step 3: Confirming order (~0.5s)
-        setProcessingStep(3);
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Step 4: Creating order (~0.5s then API call)
-        setProcessingStep(4);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const response = await orderAPI.createOrder(shippingAddress, 'COD', appliedCoupon?.code || '');
-
-        if (response.success) {
-          // Store order data
-          setOrderData(response.data?.order);
-          // Clear coupon from session
-          sessionStorage.removeItem('appliedCoupon');
-
-          // Step 5: Order confirmed (~0.5s)
-          setProcessingStep(5);
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          setIsProcessingOrder(false);
-          setLoading(false);
-          setShowSuccessModal(true);
-          // Clear cart after showing modal to prevent redirect
-          clearCart();
-          // Store order total in localStorage for success page
-          const orderTotal = finalPayable;
-          localStorage.setItem('lastOrderTotal', orderTotal.toString());
-
-          // Navigate to success page after showing the modal with smooth transition
-          setTimeout(() => {
-            setShowSuccessModal(false);
-            // Small delay for modal fade out
-            setTimeout(() => {
-              const orderId = response.data?.order?._id || response.data?.order?.id;
-              navigate(`/order-success?method=COD&orderId=${orderId || ''}`);
-            }, 300);
-          }, 2500);
-        } else {
-          setIsPlacingOrder(false);
-          setIsProcessingOrder(false);
-          setLoading(false);
-          setProcessingStep(0);
-          throw new Error(response.message || 'Failed to create order');
-        }
-        return;
       }
 
       // Handle Razorpay payment
@@ -841,23 +778,6 @@ const Checkout = () => {
                       <div className="text-xs text-gray-500 mt-0.5">Cards, UPI, Net Banking, Wallets</div>
                     </div>
                   </label>
-                  <label className={`flex items-start gap-3 p-3 border rounded-md cursor-pointer transition-all ${paymentMethod === 'COD'
-                      ? 'border-gray-900 bg-gray-50'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                    }`}>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="COD"
-                      checked={paymentMethod === 'COD'}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-4 h-4 text-gray-900 focus:ring-gray-900 mt-0.5"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900 break-words">Cash on Delivery</div>
-                      <div className="text-xs text-gray-500 mt-0.5">Pay on delivery</div>
-                    </div>
-                  </label>
                 </div>
               </div>
 
@@ -878,24 +798,21 @@ const Checkout = () => {
                     </>
                   ) : (
                     <>
-                      {paymentMethod === 'COD' ? (
-                        <>
-                          <Package className="w-4 h-4" />
-                          <span>Place Order</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                          </svg>
-                          <span>Pay Now</span>
-                        </>
-                      )}
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                      <span>Pay Now</span>
                     </>
                   )}
                 </button>
                 <p className="text-xs text-gray-500 mt-3 text-center">
-                  By placing your order, you agree to our Terms & Conditions
+                  By placing your order, you agree to our{' '}
+                  <Link
+                    to="/returns"
+                    className="text-gray-600 underline hover:text-gray-900 transition-colors"
+                  >
+                    Terms & Conditions
+                  </Link>
                 </p>
                 {/* <button
                   onClick={() => setShowInvoicePreview(true)}

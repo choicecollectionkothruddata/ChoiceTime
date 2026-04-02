@@ -55,11 +55,21 @@ const Returns = () => {
                   <ArrowItem>If the wrong product is delivered</ArrowItem>
                   <ArrowItem>If the product is damaged during shipping</ArrowItem>
                 </ul>
+                <div className="mt-4">
+                  <h4 className="font-semibold text-gray-900 mb-1">Shipping Charge (Non-Refundable)</h4>
+                  <p className="text-gray-600 leading-relaxed">
+                    For orders below <span className="font-semibold">₹2000</span>, a shipping charge of <span className="font-semibold">₹100</span> is applicable.
+                    For orders above <span className="font-semibold">₹2000</span>, shipping is free.
+                    If the order is cancelled after confirmation, a cancellation charge of <span className="font-semibold">₹200</span> will be deducted.
+                    This amount is <span className="font-semibold">not refundable</span>.
+                  </p>
+                </div>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Refund Process (When Applicable)</h3>
                 <p className="text-gray-600 leading-relaxed">
                   If any refund is approved, the amount will be credited back to the original payment method within 7-14 business days.
+                  Refunds, where applicable, exclude non-refundable shipping/cancellation charges (₹100 shipping for orders below ₹2000 and ₹200 cancellation charge if cancelled after confirmation).
                 </p>
               </div>
             </div>

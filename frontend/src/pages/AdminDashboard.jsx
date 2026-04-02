@@ -122,6 +122,7 @@ const AdminDashboard = () => {
   const [productCategory, setProductCategory] = useState('men');
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
   const [sortBy, setSortBy] = useState('default');
+  const [stockFilter, setStockFilter] = useState('all'); // all | in | out
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -1523,18 +1524,34 @@ const AdminDashboard = () => {
           });
         }
 
-        // Sort products by price
+        // Filter by stock
+        if (stockFilter !== 'all') {
+          filteredProducts = filteredProducts.filter((p) => {
+            const stockValue = Number(p?.stock ?? 0);
+            return stockFilter === 'in' ? stockValue > 0 : stockValue <= 0;
+          });
+        }
+
+        // Sort products
         if (sortBy !== 'default') {
           filteredProducts = [...filteredProducts].sort((a, b) => {
+            const stockA = Number(a?.stock ?? 0);
+            const stockB = Number(b?.stock ?? 0);
             const priceA = a.finalPrice || a.price || 0;
             const priceB = b.finalPrice || b.price || 0;
-            
-            if (sortBy === 'price-low') {
-              return priceA - priceB;
-            } else if (sortBy === 'price-high') {
-              return priceB - priceA;
+
+            switch (sortBy) {
+              case 'price-low':
+                return priceA - priceB;
+              case 'price-high':
+                return priceB - priceA;
+              case 'stock-low':
+                return stockA - stockB;
+              case 'stock-high':
+                return stockB - stockA;
+              default:
+                return 0;
             }
-            return 0;
           });
         }
 
@@ -1560,6 +1577,7 @@ const AdminDashboard = () => {
                     setProductCategory(e.target.value);
                     setSelectedSubCategory('');
                     setSortBy('default');
+                    setStockFilter('all');
                     setCurrentPage(1);
                   }}
                   className="border rounded-lg px-3 py-2 text-sm w-full sm:w-auto"
@@ -1581,6 +1599,21 @@ const AdminDashboard = () => {
                   <option value="default">Sort by: Default</option>
                   <option value="price-low">Sort by: Price (Low to High)</option>
                   <option value="price-high">Sort by: Price (High to Low)</option>
+                  <option value="stock-low">Sort by: Stock (Low to High)</option>
+                  <option value="stock-high">Sort by: Stock (High to Low)</option>
+                </select>
+
+                <select
+                  value={stockFilter}
+                  onChange={(e) => {
+                    setStockFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="border rounded-lg px-3 py-2 text-sm w-full sm:w-auto"
+                >
+                  <option value="all">Stock: All</option>
+                  <option value="in">Stock: In Stock</option>
+                  <option value="out">Stock: Out of Stock</option>
                 </select>
               </div>
             </div>

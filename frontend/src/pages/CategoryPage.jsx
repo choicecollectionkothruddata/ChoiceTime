@@ -273,20 +273,9 @@ const CategoryPage = () => {
     });
   };
 
-  // Show 404-like message if category not found after loading
-  if (!isLoading && navCategories.length > 0 && !currentCategory && slug) {
-    return (
-      <div className="min-h-screen bg-brown-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Category Not Found</h1>
-          <p className="text-gray-600 mb-6">The category "{slug}" does not exist.</p>
-          <Link to="/" className="text-blue-600 hover:text-blue-800 font-medium">
-            ← Back to Home
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // Note:
+  // Some categories can be present in products but not in navCategories from backend.
+  // Don't block the page in that case; products are fetched by slug anyway.
 
   return (
     <div className="min-h-[calc(100vh-110px)] md:h-[calc(100vh-110px)] bg-brown-50 flex flex-col md:flex-row">

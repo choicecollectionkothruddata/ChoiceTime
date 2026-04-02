@@ -57,6 +57,18 @@ const ProductCard = ({ product }) => {
   const hasDiscount = originalPrice > 0 && originalPrice > finalPrice && finalPrice > 0;
   const productId = product._id || product.id;
   const isAlreadyInCart = isProductInCart(productId);
+
+  // Stock logic (support multiple possible field names)
+  const inStockFlag =
+    typeof product?.inStock === 'boolean'
+      ? product.inStock
+      : typeof product?.in_stock === 'boolean'
+        ? product.in_stock
+        : null;
+
+  const rawStock = product?.stock ?? product?.availableStock ?? product?.qtyInStock ?? null;
+  const parsedStock = rawStock === null || rawStock === undefined ? null : Number(rawStock);
+  const isOutOfStock = inStockFlag !== null ? !inStockFlag : parsedStock !== null && !Number.isNaN(parsedStock) ? parsedStock <= 0 : false;
   
   // Get the image source with fallback
   // For lenses, use the 2nd image (index 1) as default if available
@@ -84,6 +96,7 @@ const ProductCard = ({ product }) => {
   const handleAddClick = (e) => {
     e.preventDefault();
     e.stopPropagation(); 
+    if (isOutOfStock) return;
     if (isAlreadyInCart) return;
     if (sizes.length > 0) {
       setShowSizes(true);
@@ -157,6 +170,13 @@ const ProductCard = ({ product }) => {
             {product.onSale && (
               <span className="absolute top-2 left-2 z-20 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded tracking-wide">
                 SALE
+              </span>
+            )}
+
+            {/* Out of Stock Badge */}
+            {isOutOfStock && (
+              <span className="absolute top-2 left-2 z-20 bg-gray-900/90 text-white text-[10px] font-bold px-2 py-1 rounded tracking-wide">
+                OUT OF STOCK
               </span>
             )}
 
@@ -272,7 +292,17 @@ const ProductCard = ({ product }) => {
         
         {/* Add to Cart Button - Always at the bottom */}
         <div className="px-3 pb-3 mt-auto">
-          {!showSizes ? (
+          {isOutOfStock ? (
+            <div className="space-y-2">
+              <button
+                type="button"
+                disabled
+                className="w-full py-2.5 text-xs font-bold uppercase tracking-wide rounded-lg bg-gray-200 text-gray-500 border border-gray-300 cursor-not-allowed"
+              >
+                Out of Stock
+              </button>
+            </div>
+          ) : !showSizes ? (
             <button
               onClick={handleAddClick}
               disabled={isAlreadyInCart}

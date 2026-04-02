@@ -21,10 +21,20 @@ const categories = [
     path: '/mens-belts', 
     image: 'https://res.cloudinary.com/daxdjob49/image/upload/v1770666752/b025a01b-ace8-4a69-aba5-6f3390372142.png'
   },
+  {
+    label: 'Mens Wallet',
+    path: '/mens-wallet',
+    image: 'https://res.cloudinary.com/daxdjob49/image/upload/v1775115656/634a46ad-525a-4be4-998a-2439ae7a9024.png'
+  },
   { 
     label: "Men's Perfumes", 
     path: '/mens-perfumes', 
     image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=400&auto=format&fit=crop'
+  },
+  {
+    label: 'Accesories',
+    path: '/accessories',
+    image: 'https://res.cloudinary.com/daxdjob49/image/upload/v1775115876/4f1e726f-c8f1-45a3-a82e-2e34890da1f1.png'
   },
   { 
     label: "Women's Perfumes", 
@@ -49,7 +59,7 @@ const ShopByCategory = () => {
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5 md:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-4 sm:gap-5 md:gap-6">
           {categories.map((cat, idx) => (
             <Link
               key={cat.path}

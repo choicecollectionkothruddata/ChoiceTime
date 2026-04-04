@@ -116,11 +116,18 @@ router.get('/:orderId', protect, async (req, res) => {
 // Create order from cart
 router.post('/create', protect, async (req, res) => {
   try {
+    console.log('Order creation request received:', {
+      body: req.body,
+      user: req.user._id
+    });
+    
     const { shippingAddress, paymentMethod = 'COD', couponCode } = req.body;
 
     const cart = await Cart.findOne({ user: req.user._id });
+    console.log('Cart found:', cart ? `Items: ${cart.items.length}` : 'No cart found');
 
     if (!cart || cart.items.length === 0) {
+      console.log('Cart is empty or not found');
       return res.status(400).json({
         success: false,
         message: 'Cart is empty',
@@ -174,6 +181,14 @@ router.post('/create', protect, async (req, res) => {
     const totalAmount = amountAfterDiscount + shippingAmount;
 
     // Create order
+    console.log('Creating order with data:', {
+      user: req.user._id,
+      itemsCount: cart.items.length,
+      totalAmount,
+      paymentMethod,
+      shippingAddress
+    });
+    
     const order = await Order.create({
       user: req.user._id,
       items: cart.items.map((item) => ({
@@ -191,10 +206,13 @@ router.post('/create', protect, async (req, res) => {
       paymentMethod,
     });
 
+    console.log('Order created successfully:', order._id);
+
     // Clear cart
     cart.items = [];
     await cart.save();
 
+    console.log('Sending success response');
     res.status(201).json({
       success: true,
       message: 'Order created successfully',

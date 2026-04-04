@@ -225,6 +225,17 @@ export const orderAPI = {
       body: JSON.stringify({ shippingAddress, paymentMethod, couponCode }),
     });
   },
+
+  getOrder: async (orderId) => {
+    return apiRequest(`/orders/${orderId}`);
+  },
+
+  cancelOrder: async (orderId, reason) => {
+    return apiRequest(`/orders/${orderId}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  },
 };
 
 // Payment API calls
@@ -265,6 +276,11 @@ export const profileAPI = {
 // Categories API (public - for nav)
 export const categoriesAPI = {
   getCategories: async () => apiRequest('/categories', { cache: { ttlMs: 5 * 60 * 1000 } }),
+};
+
+// Settings API (public)
+export const settingsAPI = {
+  getShippingConfig: async () => apiRequest('/settings/shipping'),
 };
 
 // Reels (public - home page trending reels; admin uses adminAPI.getReels)

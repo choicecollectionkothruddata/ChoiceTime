@@ -30,6 +30,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import CookiePolicy from './pages/CookiePolicy';
 import OrderSuccess from './pages/OrderSuccess';
+import OrderDetail from './pages/OrderDetail';
 import SearchResults from './pages/SearchResults';
 import Wishlist from './pages/Wishlist';
 import RecentlyViewed from './pages/RecentlyViewed';
@@ -90,6 +91,7 @@ function AppContent() {
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/cookie-policy" element={<CookiePolicy />} />
           <Route path="/order-success" element={<OrderSuccess />} />
+          <Route path="/orders/:orderId" element={<OrderDetail />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/recently-viewed" element={<RecentlyViewed />} />

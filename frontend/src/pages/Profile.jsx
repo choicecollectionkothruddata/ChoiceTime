@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { profileAPI, returnsAPI, orderAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import Invoice from '../components/Invoice';
 import { FileText } from 'lucide-react';
 import { uploadImageToCloudinary, uploadVideoToCloudinary } from '../utils/cloudinary';
 
@@ -73,42 +72,36 @@ function canReturnOrder(order) {
   return new Date() <= getReturnWindowEnd(order);
 }
 
-// OrderRow component for displaying order with invoice and return
+// OrderRow component for displaying order with return
 const OrderRow = ({ order, user, canReturn, alreadyRequested, returnStatus, returnRejectReason, onOpenReturn, onOpenCancelModal }) => {
-  const [showInvoice, setShowInvoice] = useState(false);
   const canCancel = order?.status === 'pending' || order?.status === 'processing';
 
   return (
-    <>
-      <tr className="hover:bg-gray-50/50 transition-colors">
-        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-zinc-900">
+    <tr className="hover:bg-gray-50/50 transition-colors">
+      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-zinc-900">
+        <Link 
+          to={`/orders/${order._id}`}
+          className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+        >
           #{order._id?.slice(-6).toUpperCase()}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          {new Date(order.orderDate || order.createdAt).toLocaleDateString()}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
-            ${order.status === 'delivered' ? 'bg-green-50 text-green-700 border-green-200' :
-              order.status === 'shipped' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                order.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-200' :
-                  'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-            {order.status?.charAt(0).toUpperCase() + order.status?.slice(1)}
-          </span>
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 text-right font-medium">
-          ₹{order.totalAmount?.toLocaleString()}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-center">
-          <button
-            onClick={() => setShowInvoice(true)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            View
-          </button>
-        </td>
-        <td className="px-6 py-4 text-center">
+        </Link>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {new Date(order.orderDate || order.createdAt).toLocaleDateString()}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
+          ${order.status === 'delivered' ? 'bg-green-50 text-green-700 border-green-200' :
+            order.status === 'shipped' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+              order.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-200' :
+                'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+          {order.status?.charAt(0).toUpperCase() + order.status?.slice(1)}
+        </span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 text-right font-medium">
+        ₹{order.totalAmount?.toLocaleString()}
+      </td>
+      <td className="px-6 py-4 text-center">
           {alreadyRequested ? (
             <div className="flex flex-col items-center gap-0.5">
               <span className="text-xs font-medium text-gray-500 capitalize">{returnStatus || 'Requested'}</span>
@@ -138,36 +131,7 @@ const OrderRow = ({ order, user, canReturn, alreadyRequested, returnStatus, retu
             </span>
           )}
         </td>
-      </tr>
-      {showInvoice && (
-        <tr>
-          <td colSpan="6" className="p-0">
-            <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto" onClick={() => setShowInvoice(false)}>
-              <div className="bg-white rounded-lg max-w-4xl w-full my-8 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-gray-900">Invoice</h2>
-                  <button
-                    onClick={() => setShowInvoice(false)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="p-6">
-                  <Invoice
-                    order={order}
-                    user={user}
-                    onPrint={() => window.print()}
-                  />
-                </div>
-              </div>
-            </div>
-          </td>
-        </tr>
-      )}
-    </>
+    </tr>
   );
 };
 
@@ -587,7 +551,6 @@ const Profile = () => {
                               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
                               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                               <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
-                              <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Invoice</th>
                               <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Return</th>
                             </tr>
                           </thead>

@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { paymentAPI, profileAPI, orderAPI, getShippingConfig as getShippingConfigAPI } from '../utils/api';
+import { paymentAPI, profileAPI, orderAPI, getShippingConfig as getShippingConfigAPI, couponAPI } from '../utils/api';
 import { loadScript } from '../utils/razorpay';
 import { Check, FileText } from 'lucide-react';
-import Invoice from '../components/Invoice';
 
 const Checkout = () => {
   const { cart, getCartTotal, clearCart } = useCart();
@@ -14,23 +13,79 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [savingAddress, setSavingAddress] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [addressSaved, setAddressSaved] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('razorpay'); // only online payment
+  const [paymentMethod, setPaymentMethod] = useState('razorpay'); // 'razorpay' or 'cod'
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false); // Prevent cart redirect during order placement
   const [isProcessingOrder, setIsProcessingOrder] = useState(false); // Show processing state
   const [processingStep, setProcessingStep] = useState(0); // Track processing steps
   const [orderData, setOrderData] = useState(null); // Store order data for success page
-  const [showInvoicePreview, setShowInvoicePreview] = useState(false); // Show invoice preview
+
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('');
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState('');
+  const [availableCoupons, setAvailableCoupons] = useState([]);
 
   // Load applied coupon from sessionStorage (set in Cart page)
-  const [appliedCoupon] = useState(() => {
+  const [appliedCoupon, setAppliedCoupon] = useState(() => {
     try {
       const saved = sessionStorage.getItem('appliedCoupon');
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
   const couponDiscount = appliedCoupon?.discount || 0;
+
+  // Coupon functions
+  const loadAvailableCoupons = async () => {
+    try {
+      const response = await couponAPI.getAvailable();
+      if (response.success && response.data) {
+        setAvailableCoupons(response.data);
+      }
+    } catch (err) {
+      console.error('Error loading available coupons:', err);
+    }
+  };
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Please enter a coupon code');
+      return;
+    }
+
+    setApplyingCoupon(true);
+    setCouponError('');
+    setError('');
+
+    try {
+      const response = await couponAPI.validate(couponCode.trim(), getCartTotal());
+      
+      if (response.success && response.data) {
+        const coupon = response.data;
+        setAppliedCoupon(coupon);
+        sessionStorage.setItem('appliedCoupon', JSON.stringify(coupon));
+        setCouponCode('');
+        setError('');
+        setSuccess(`Coupon "${coupon.code}" applied successfully! You saved ₹${coupon.discount}`);
+      } else {
+        setCouponError(response.message || 'Invalid coupon code');
+      }
+    } catch (err) {
+      console.error('Error applying coupon:', err);
+      setCouponError('Failed to apply coupon. Please try again.');
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    sessionStorage.removeItem('appliedCoupon');
+    setError('');
+    setSuccess('');
+  };
   const [shippingConfig, setShippingConfig] = useState({
     freeShippingThreshold: 2000,
     shippingCharge: 50,
@@ -101,6 +156,7 @@ const Checkout = () => {
       }
     };
     loadShippingConfig();
+    loadAvailableCoupons();
   }, [isAuthenticated, cart.length, navigate, isPlacingOrder]);
 
   const handleInputChange = (e) => {
@@ -156,6 +212,8 @@ const Checkout = () => {
   };
 
   const handlePayment = async () => {
+    console.log('Payment handler called with method:', paymentMethod);
+    
     if (!shippingAddress.name || !shippingAddress.phone || !shippingAddress.address || !shippingAddress.city) {
       setError('Please fill in all required shipping address fields');
       return;
@@ -163,6 +221,7 @@ const Checkout = () => {
 
     setLoading(true);
     setError('');
+    setIsPlacingOrder(true);
 
     try {
       // Save address automatically before proceeding to payment
@@ -186,88 +245,165 @@ const Checkout = () => {
         // Continue with payment even if address save fails
       }
 
-      // Handle Razorpay payment
-      // Load Razorpay script
-      const scriptLoaded = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
-
-      if (!scriptLoaded) {
-        throw new Error('Failed to load payment gateway. Please refresh the page and try again.');
+      if (paymentMethod === 'cod') {
+        console.log('Processing COD order...');
+        // Handle Cash on Delivery order
+        await handleCODOrder();
+      } else {
+        console.log('Processing Razorpay payment...');
+        // Handle Razorpay payment
+        await handleRazorpayPayment();
       }
-
-      if (!window.Razorpay) {
-        throw new Error('Payment gateway is not available. Please refresh the page and try again.');
-      }
-
-      // Create Razorpay order
-      const response = await paymentAPI.createRazorpayOrder(shippingAddress);
-
-      if (!response.success) {
-        throw new Error(response.message || 'Failed to create payment order');
-      }
-
-      const { orderId, amount, currency, key } = response.data;
-
-      // Razorpay options
-      const options = {
-        key: key,
-        amount: amount,
-        currency: currency,
-        name: 'Choicetime',
-        description: `Order for ${cart.length} item(s)`,
-        order_id: orderId,
-        handler: async function (response) {
-          try {
-            // Verify payment
-            const verifyResponse = await paymentAPI.verifyPayment(
-              response.razorpay_order_id,
-              response.razorpay_payment_id,
-              response.razorpay_signature
-            );
-
-            if (verifyResponse.success) {
-              clearCart();
-              navigate('/profile?tab=orders&payment=success');
-            } else {
-              setError('Payment verification failed. Please contact support.');
-            }
-          } catch (err) {
-            console.error('Payment verification error:', err);
-            setError('Payment verification failed. Please contact support.');
-          } finally {
-            setLoading(false);
-          }
-        },
-        prefill: {
-          name: shippingAddress.name,
-          email: user?.email || '',
-          contact: shippingAddress.phone,
-        },
-        notes: {
-          address: `${shippingAddress.address}, ${shippingAddress.city}, ${shippingAddress.state}`,
-        },
-        theme: {
-          color: '#000000',
-        },
-        modal: {
-          ondismiss: function () {
-            setLoading(false);
-          },
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.on('payment.failed', function (response) {
-        setError(`Payment failed: ${response.error.description}`);
-        setLoading(false);
-        setIsPlacingOrder(false); // Reset flag on payment failure
-      });
-      razorpay.open();
     } catch (err) {
       console.error('Payment error:', err);
       setError(err.message || 'Failed to initiate payment. Please try again.');
       setLoading(false);
-      setIsPlacingOrder(false); // Reset flag on error
+      setIsPlacingOrder(false);
     }
+  };
+
+  const handleCODOrder = async () => {
+    console.log('Starting COD order process...');
+    setIsProcessingOrder(true);
+    setProcessingStep(1);
+
+    try {
+      // Check if cart has items
+      console.log('Cart items:', cart.length);
+      if (cart.length === 0) {
+        throw new Error('Your cart is empty');
+      }
+
+      // Simulate processing steps
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setProcessingStep(2);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setProcessingStep(3);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setProcessingStep(4);
+
+      console.log('Creating COD order with data:', {
+        shippingAddress,
+        paymentMethod: 'COD',
+        couponCode: appliedCoupon?.code || ''
+      });
+
+      // Create COD order
+      const response = await orderAPI.createOrder(
+        shippingAddress,
+        'COD',
+        appliedCoupon?.code || ''
+      );
+
+      console.log('COD order response:', response);
+
+      if (response.success) {
+        console.log('Order created successfully');
+        setProcessingStep(5);
+        setOrderData(response.data.order);
+        
+        // Show success modal immediately
+        setShowSuccessModal(true);
+        console.log('Success modal shown');
+        
+        // Clear cart and redirect after delay
+        setTimeout(() => {
+          console.log('Clearing cart and redirecting...');
+          clearCart();
+          navigate('/profile?tab=orders&payment=cod');
+        }, 2000);
+      } else {
+        console.error('Order creation failed:', response.message);
+        throw new Error(response.message || 'Failed to create order');
+      }
+    } catch (err) {
+      console.error('COD order error:', err);
+      setError(err.message || 'Failed to place COD order. Please try again.');
+      // Don't re-throw the error, handle it here
+      setIsProcessingOrder(false);
+      setLoading(false);
+      setIsPlacingOrder(false);
+    }
+  };
+
+  const handleRazorpayPayment = async () => {
+    // Load Razorpay script
+    const scriptLoaded = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
+
+    if (!scriptLoaded) {
+      throw new Error('Failed to load payment gateway. Please refresh the page and try again.');
+    }
+
+    if (!window.Razorpay) {
+      throw new Error('Payment gateway is not available. Please refresh the page and try again.');
+    }
+
+    // Create Razorpay order
+    const response = await paymentAPI.createRazorpayOrder(shippingAddress);
+
+    if (!response.success) {
+      throw new Error(response.message || 'Failed to create payment order');
+    }
+
+    const { orderId, amount, currency, key } = response.data;
+
+    // Razorpay options
+    const options = {
+      key: key,
+      amount: amount,
+      currency: currency,
+      name: 'Choicetime',
+      description: `Order for ${cart.length} item(s)`,
+      order_id: orderId,
+      handler: async function (response) {
+        try {
+          // Verify payment
+          const verifyResponse = await paymentAPI.verifyPayment(
+            response.razorpay_order_id,
+            response.razorpay_payment_id,
+            response.razorpay_signature
+          );
+
+          if (verifyResponse.success) {
+            clearCart();
+            navigate('/profile?tab=orders&payment=success');
+          } else {
+            setError('Payment verification failed. Please contact support.');
+          }
+        } catch (err) {
+          console.error('Payment verification error:', err);
+          setError('Payment verification failed. Please contact support.');
+        } finally {
+          setLoading(false);
+          setIsPlacingOrder(false);
+        }
+      },
+      prefill: {
+        name: shippingAddress.name,
+        email: user?.email || '',
+        contact: shippingAddress.phone,
+      },
+      notes: {
+        address: `${shippingAddress.address}, ${shippingAddress.city}, ${shippingAddress.state}`,
+      },
+      theme: {
+        color: '#000000',
+      },
+      modal: {
+        ondismiss: function () {
+          setLoading(false);
+          setIsPlacingOrder(false);
+        },
+      },
+    };
+
+    const razorpay = new window.Razorpay(options);
+    razorpay.on('payment.failed', function (response) {
+      setError(`Payment failed: ${response.error.description}`);
+      setLoading(false);
+      setIsPlacingOrder(false);
+    });
+    razorpay.open();
   };
 
   // Don't return null if we're placing an order (to show the modal)
@@ -722,6 +858,95 @@ const Checkout = () => {
                   );
                 })}
               </div>
+              
+              {/* Coupon Section */}
+              <div className="px-4 sm:px-6 py-4 border-t border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Coupon Code</h3>
+                {appliedCoupon ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-green-800">
+                          Coupon "{appliedCoupon.code}" applied
+                        </p>
+                        <p className="text-xs text-green-600">
+                          You saved ₹{appliedCoupon.discount}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeCoupon}
+                        className="text-green-600 hover:text-green-800 text-sm font-medium"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => {
+                          setCouponCode(e.target.value);
+                          setCouponError('');
+                        }}
+                        placeholder="Enter coupon code"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                        onKeyPress={(e) => e.key === 'Enter' && applyCoupon()}
+                      />
+                      <button
+                        type="button"
+                        onClick={applyCoupon}
+                        disabled={applyingCoupon || !couponCode.trim()}
+                        className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {applyingCoupon ? (
+                          <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        ) : (
+                          'Apply'
+                        )}
+                      </button>
+                    </div>
+                    {couponError && (
+                      <p className="text-xs text-red-600">{couponError}</p>
+                    )}
+                    {availableCoupons.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs text-gray-500 mb-2">Available coupons:</p>
+                        <div className="space-y-1">
+                          {availableCoupons.slice(0, 3).map((coupon) => (
+                            <div
+                              key={coupon._id}
+                              className="flex items-center justify-between p-2 bg-gray-50 border border-gray-200 rounded text-xs"
+                            >
+                              <div>
+                                <span className="font-medium text-gray-900">{coupon.code}</span>
+                                <span className="text-gray-500 ml-2">
+                                  Save ₹{coupon.discount}
+                                  {coupon.minAmount && ` (Min: ₹${coupon.minAmount})`}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setCouponCode(coupon.code)}
+                                className="text-gray-600 hover:text-gray-900"
+                              >
+                                Use
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              
               <div className="px-4 sm:px-6 py-4 border-t border-gray-200 bg-gray-50 space-y-2.5">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
@@ -778,6 +1003,25 @@ const Checkout = () => {
                       <div className="text-xs text-gray-500 mt-0.5">Cards, UPI, Net Banking, Wallets</div>
                     </div>
                   </label>
+                  
+                  <label className={`flex items-start gap-3 p-3 border rounded-md cursor-pointer transition-all ${
+                    paymentMethod === 'cod' 
+                      ? 'border-gray-900 bg-gray-50' 
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="cod"
+                      checked={paymentMethod === 'cod'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-4 h-4 text-gray-900 focus:ring-gray-900 mt-0.5"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">Cash on Delivery</div>
+                      <div className="text-xs text-gray-500 mt-0.5">Pay when you receive your order</div>
+                    </div>
+                  </label>
                 </div>
               </div>
 
@@ -794,14 +1038,14 @@ const Checkout = () => {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      <span>{isProcessingOrder ? 'Placing Order...' : 'Processing...'}</span>
+                      <span>{paymentMethod === 'cod' ? 'Place Order' : isProcessingOrder ? 'Placing Order...' : 'Processing...'}</span>
                     </>
                   ) : (
                     <>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                       </svg>
-                      <span>Pay Now</span>
+                      <span>{paymentMethod === 'cod' ? 'Place Order' : 'Pay Now'}</span>
                     </>
                   )}
                 </button>
@@ -814,58 +1058,12 @@ const Checkout = () => {
                     Terms & Conditions
                   </Link>
                 </p>
-                {/* <button
-                  onClick={() => setShowInvoicePreview(true)}
-                  className="w-full mt-3 bg-white text-gray-700 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                >
-                  <FileText className="w-4 h-4" />
-                  Preview Invoice
-                </button> */}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Invoice Preview Modal */}
-      {showInvoicePreview && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto" onClick={() => setShowInvoicePreview(false)}>
-          <div className="bg-white rounded-lg max-w-4xl w-full my-4 sm:my-8 max-h-[90vh] overflow-y-auto overflow-x-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-900">Invoice Preview</h2>
-              <button
-                onClick={() => setShowInvoicePreview(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-6">
-              <Invoice
-                order={{
-                  items: cart.map(item => ({
-                    product: item.product || item,
-                    quantity: item.quantity,
-                    size: item.size || '',
-                    color: item.color || '',
-                    boxType: item.boxType || '',
-                    boxPrice: Number(item.boxPrice) || 0,
-                    price: ((item.product || item).price || (item.product || item).finalPrice || 0) + (Number(item.boxPrice) || 0),
-                  })),
-                  totalAmount: getCartTotal(),
-                  shippingAddress: shippingAddress,
-                  paymentMethod: paymentMethod,
-                  orderDate: new Date(),
-                  status: 'pending',
-                }}
-                user={user}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

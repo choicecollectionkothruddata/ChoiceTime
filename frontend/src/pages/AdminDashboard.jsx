@@ -3685,6 +3685,43 @@ const AdminDashboard = () => {
                             <div><span className="text-gray-600">Date:</span> <span className="text-gray-900">{new Date(order.orderDate || order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span></div>
                             <div><span className="text-gray-600">Items:</span> <span className="font-medium text-gray-900">{order.items?.length || 0} item(s)</span></div>
                           </div>
+
+                          {/* Shipping Address */}
+                          <div className="pt-4 border-t border-gray-200">
+                            <h4 className="text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">Shipping Address</h4>
+                            {order.shippingAddress ? (
+                              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div>
+                                    <span className="text-gray-600">Name:</span>
+                                    <span className="font-medium text-gray-900 ml-2">{order.shippingAddress.name || 'N/A'}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-600">Phone:</span>
+                                    <span className="text-gray-900 ml-2">{order.shippingAddress.phone || 'N/A'}</span>
+                                  </div>
+                                </div>
+                                <div className="mt-3">
+                                  <span className="text-gray-600">Address:</span>
+                                  <div className="text-gray-900 mt-1">
+                                    <p>{order.shippingAddress.address || 'N/A'}</p>
+                                    {(order.shippingAddress.city || order.shippingAddress.state || order.shippingAddress.zipCode) && (
+                                      <p className="mt-1">
+                                        {order.shippingAddress.city && `${order.shippingAddress.city}, `}
+                                        {order.shippingAddress.state && `${order.shippingAddress.state} `}
+                                        {order.shippingAddress.zipCode && `- ${order.shippingAddress.zipCode}`}
+                                      </p>
+                                    )}
+                                    <p>{order.shippingAddress.country || 'India'}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm">
+                                <p className="text-yellow-800">No shipping address available</p>
+                              </div>
+                            )}
+                          </div>
                           <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-200">
                             <div>
                               <p className="text-xs text-gray-500 uppercase">Total</p>

@@ -56,6 +56,26 @@ const orderSchema = new mongoose.Schema({
     type: String,
     default: 'COD', // Cash on Delivery
   },
+  advancePayment: {
+    amount: {
+      type: Number,
+      default: 0,
+    },
+    razorpayOrderId: {
+      type: String,
+    },
+    razorpayPaymentId: {
+      type: String,
+    },
+    razorpaySignature: {
+      type: String,
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'paid', 'refunded'],
+      default: 'pending',
+    },
+  },
   razorpayOrderId: {
     type: String,
   },

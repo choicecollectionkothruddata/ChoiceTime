@@ -27,31 +27,35 @@ const TermsOfService = () => {
       content: 'You agree to pay us the charges associated with availing the Services.'
     },
     {
-      title: '7. Lawful Use',
+      title: '7. Cash on Delivery (COD) Advance Payment',
+      content: 'For Cash on Delivery orders, customers are required to pay a non-refundable advance amount of ₹200 online before the order is processed. The remaining balance will be collected upon delivery. The advance payment is non-refundable under any circumstances, including order cancellation, returns, or delays. This policy helps us ensure genuine orders and efficient delivery management.'
+    },
+    {
+      title: '8. Lawful Use',
       content: 'You agree not to use the Platform and/or Services for any purpose that is unlawful, illegal, or forbidden by these Terms, or by Indian or local laws that might apply to you.'
     },
     {
-      title: '8. Third-Party Links',
+      title: '9. Third-Party Links',
       content: 'You acknowledge that the website and Services may contain links to third-party websites. Upon accessing these links, you will be governed by the terms of use, privacy policy, and other policies of such third-party websites. These links are provided for your convenience to provide further information.'
     },
     {
-      title: '9. Legally Binding Contract',
+      title: '10. Legally Binding Contract',
       content: 'You understand that upon initiating a transaction for availing the Services, you are entering into a legally binding and enforceable contract with the Platform Owner for the Services.'
     },
     {
-      title: '10. Indemnity',
+      title: '11. Indemnity',
       content: 'You shall indemnify and hold harmless the Platform Owner, its affiliates, group companies (as applicable), and their respective officers, directors, agents, and employees, from any claim or demand, or actions including reasonable attorneys\' fees, made by any third party or penalty imposed due to or arising out of your breach of these Terms of Use, Privacy Policy, and other Policies, or your violation of any law, rules, or regulations or the rights (including infringement of intellectual property rights) of a third party.'
     },
     {
-      title: '11. Limitation of Liability',
+      title: '12. Limitation of Liability',
       content: 'In no event will the Platform Owner be liable for any indirect, consequential, incidental, special, or punitive damages, including without limitation, damages for loss of profits or revenues, business interruption, loss of business opportunities, loss of data, or loss of other economic interests, whether in contract, negligence, tort, or otherwise, arising from the use of or inability to use the Services. However, the Platform Owner\'s liability will not exceed the amount paid by you for using the Services giving rise to the cause of action or Rupees One Hundred (Rs. 100), whichever is less.'
     },
     {
-      title: '12. Force Majeure',
+      title: '13. Force Majeure',
       content: 'Notwithstanding anything contained in these Terms of Use, the parties shall not be liable for any failure to perform an obligation under these Terms if performance is prevented or delayed by a force majeure event.'
     },
     {
-      title: '13. Governing Law and Jurisdiction',
+      title: '14. Governing Law and Jurisdiction',
       content: 'These Terms and any dispute or claim relating to them, or their enforceability, shall be governed by and construed in accordance with the laws of India. All disputes arising out of or in connection with these Terms shall be subject to the exclusive jurisdiction of the courts in India.'
     }
   ];

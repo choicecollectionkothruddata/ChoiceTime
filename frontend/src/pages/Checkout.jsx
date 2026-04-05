@@ -246,13 +246,13 @@ const Checkout = () => {
       }
 
       if (paymentMethod === 'cod') {
-        console.log('Processing COD order...');
-        // Handle Cash on Delivery order
+        console.log('Processing COD order with advance payment...');
+        // Handle Cash on Delivery order with advance payment
         await handleCODOrder();
       } else {
-        console.log('Processing Razorpay payment...');
-        // Handle Razorpay payment
-        await handleRazorpayPayment();
+        console.log('Processing online payment...');
+        // Handle online payment
+        await handleOnlinePayment();
       }
     } catch (err) {
       console.error('Payment error:', err);
@@ -263,71 +263,6 @@ const Checkout = () => {
   };
 
   const handleCODOrder = async () => {
-    console.log('Starting COD order process...');
-    setIsProcessingOrder(true);
-    setProcessingStep(1);
-
-    try {
-      // Check if cart has items
-      console.log('Cart items:', cart.length);
-      if (cart.length === 0) {
-        throw new Error('Your cart is empty');
-      }
-
-      // Simulate processing steps
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setProcessingStep(2);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setProcessingStep(3);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setProcessingStep(4);
-
-      console.log('Creating COD order with data:', {
-        shippingAddress,
-        paymentMethod: 'COD',
-        couponCode: appliedCoupon?.code || ''
-      });
-
-      // Create COD order
-      const response = await orderAPI.createOrder(
-        shippingAddress,
-        'COD',
-        appliedCoupon?.code || ''
-      );
-
-      console.log('COD order response:', response);
-
-      if (response.success) {
-        console.log('Order created successfully');
-        setProcessingStep(5);
-        setOrderData(response.data.order);
-        
-        // Show success modal immediately
-        setShowSuccessModal(true);
-        console.log('Success modal shown');
-        
-        // Clear cart and redirect after delay
-        setTimeout(() => {
-          console.log('Clearing cart and redirecting...');
-          clearCart();
-          navigate('/profile?tab=orders&payment=cod');
-        }, 2000);
-      } else {
-        console.error('Order creation failed:', response.message);
-        throw new Error(response.message || 'Failed to create order');
-      }
-    } catch (err) {
-      console.error('COD order error:', err);
-      setError(err.message || 'Failed to place COD order. Please try again.');
-      // Don't re-throw the error, handle it here
-      setIsProcessingOrder(false);
-      setLoading(false);
-      setIsPlacingOrder(false);
-    }
-  };
-
-  const handleRazorpayPayment = async () => {
-    // Load Razorpay script
     const scriptLoaded = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
 
     if (!scriptLoaded) {
@@ -338,7 +273,132 @@ const Checkout = () => {
       throw new Error('Payment gateway is not available. Please refresh the page and try again.');
     }
 
-    // Create Razorpay order
+    // Create Razorpay order for ₹200 advance
+    const advanceAmount = 200;
+    const response = await paymentAPI.createRazorpayOrder({
+      amount: advanceAmount * 100, // Convert to paise
+      currency: 'INR',
+      receipt: `cod-advance-${Date.now()}`,
+      notes: {
+        type: 'cod_advance',
+        user_id: user._id,
+      }
+    });
+
+    if (!response.success) {
+      throw new Error(response.message || 'Failed to create advance payment order');
+    }
+
+    const { orderId, amount, currency, key } = response.data;
+
+    // Razorpay options for COD advance payment
+    const options = {
+      key: key,
+      amount: amount,
+      currency: currency,
+      name: 'ChoiceTime',
+      description: `COD Advance Payment - ₹${advanceAmount}`,
+      order_id: orderId,
+      handler: async function (response) {
+        try {
+          setIsProcessingOrder(true);
+          setProcessingStep(5);
+
+          // Verify advance payment
+          const verifyResponse = await paymentAPI.verifyPayment(
+            response.razorpay_order_id,
+            response.razorpay_payment_id,
+            response.razorpay_signature
+          );
+
+          if (verifyResponse.success) {
+            // Create COD order with advance payment info
+            const orderResponse = await orderAPI.createOrder(
+              shippingAddress,
+              'COD',
+              appliedCoupon?.code || '',
+              {
+                advancePayment: {
+                  amount: advanceAmount,
+                  razorpayOrderId: response.razorpay_order_id,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpaySignature: response.razorpay_signature
+                }
+              }
+            );
+
+            if (orderResponse.success) {
+              setProcessingStep(6);
+              setOrderData(orderResponse.data.order);
+              setShowSuccessModal(true);
+              setIsProcessingOrder(false);
+              setLoading(false);
+
+              // Clear cart and redirect after delay
+              setTimeout(() => {
+                clearCart();
+                navigate('/profile?tab=orders&payment=cod');
+              }, 2000);
+            } else {
+              throw new Error(orderResponse.message || 'Failed to create COD order');
+            }
+          } else {
+            throw new Error('Advance payment verification failed');
+          }
+        } catch (err) {
+          console.error('COD order error:', err);
+          setError(err.message || 'Failed to place COD order. Please try again.');
+          setIsProcessingOrder(false);
+          setLoading(false);
+          setProcessingStep(0);
+        }
+      },
+      prefill: {
+        name: shippingAddress.name,
+        email: user?.email || '',
+        contact: shippingAddress.phone,
+      },
+      notes: {
+        address: `${shippingAddress.address}, ${shippingAddress.city}, ${shippingAddress.state}`,
+        type: 'cod_advance',
+      },
+      theme: {
+        color: '#111827',
+      },
+      modal: {
+        ondismiss: function () {
+          setLoading(false);
+          setIsPlacingOrder(false);
+          setIsProcessingOrder(false);
+          setProcessingStep(0);
+          setError('Advance payment cancelled. Please try again.');
+        },
+      },
+    };
+
+    const razorpay = new window.Razorpay(options);
+    razorpay.on('payment.failed', function (response) {
+      setError(`Advance payment failed: ${response.error.description}`);
+      setLoading(false);
+      setIsPlacingOrder(false);
+      setIsProcessingOrder(false);
+      setProcessingStep(0);
+    });
+    razorpay.open();
+  };
+
+  const handleOnlinePayment = async () => {
+    const scriptLoaded = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
+
+    if (!scriptLoaded) {
+      throw new Error('Failed to load payment gateway. Please refresh the page and try again.');
+    }
+
+    if (!window.Razorpay) {
+      throw new Error('Payment gateway is not available. Please refresh the page and try again.');
+    }
+
+    // Create Razorpay order for full amount
     const response = await paymentAPI.createRazorpayOrder(shippingAddress);
 
     if (!response.success) {
@@ -347,12 +407,12 @@ const Checkout = () => {
 
     const { orderId, amount, currency, key } = response.data;
 
-    // Razorpay options
+    // Razorpay options for full payment
     const options = {
       key: key,
       amount: amount,
       currency: currency,
-      name: 'Choicetime',
+      name: 'ChoiceTime',
       description: `Order for ${cart.length} item(s)`,
       order_id: orderId,
       handler: async function (response) {
@@ -365,17 +425,41 @@ const Checkout = () => {
           );
 
           if (verifyResponse.success) {
-            clearCart();
-            navigate('/profile?tab=orders&payment=success');
+            // Create order with full payment
+            const orderResponse = await orderAPI.createOrder(
+              shippingAddress,
+              'razorpay',
+              appliedCoupon?.code || '',
+              {
+                paymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature
+              }
+            );
+
+            if (orderResponse.success) {
+              setOrderData(orderResponse.data.order);
+              setShowSuccessModal(true);
+              setIsProcessingOrder(false);
+              setLoading(false);
+
+              setTimeout(() => {
+                clearCart();
+                navigate('/profile?tab=orders&payment=success');
+              }, 2000);
+            } else {
+              throw new Error(orderResponse.message || 'Failed to create order');
+            }
           } else {
-            setError('Payment verification failed. Please contact support.');
+            throw new Error('Payment verification failed');
           }
         } catch (err) {
-          console.error('Payment verification error:', err);
-          setError('Payment verification failed. Please contact support.');
-        } finally {
+          console.error('Payment error:', err);
+          setError(err.message || 'Payment verification failed. Please contact support.');
           setLoading(false);
           setIsPlacingOrder(false);
+          setIsProcessingOrder(false);
+          setProcessingStep(0);
         }
       },
       prefill: {
@@ -387,12 +471,14 @@ const Checkout = () => {
         address: `${shippingAddress.address}, ${shippingAddress.city}, ${shippingAddress.state}`,
       },
       theme: {
-        color: '#000000',
+        color: '#111827',
       },
       modal: {
         ondismiss: function () {
           setLoading(false);
           setIsPlacingOrder(false);
+          setIsProcessingOrder(false);
+          setProcessingStep(0);
         },
       },
     };
@@ -402,6 +488,8 @@ const Checkout = () => {
       setError(`Payment failed: ${response.error.description}`);
       setLoading(false);
       setIsPlacingOrder(false);
+      setIsProcessingOrder(false);
+      setProcessingStep(0);
     });
     razorpay.open();
   };
@@ -969,10 +1057,28 @@ const Checkout = () => {
                     {shippingAmount === 0 ? 'Free' : `₹${shippingAmount.toLocaleString()}`}
                   </span>
                 </div>
+                {paymentMethod === 'cod' && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">COD Advance Payment</span>
+                    <span className="font-medium text-blue-600">₹200</span>
+                  </div>
+                )}
                 <div className="border-t border-gray-200 pt-2.5 mt-2.5 flex justify-between">
-                  <span className="text-base font-semibold text-gray-900">Total</span>
-                  <span className="text-lg font-semibold text-gray-900">₹{finalPayable.toLocaleString()}</span>
+                  <span className="text-base font-semibold text-gray-900">
+                    {paymentMethod === 'cod' ? 'Payable Now' : 'Total'}
+                  </span>
+                  <span className="text-lg font-semibold text-gray-900">
+                    ₹{paymentMethod === 'cod' ? '200' : finalPayable.toLocaleString()}
+                  </span>
                 </div>
+                {paymentMethod === 'cod' && (
+                  <div className="border-t border-gray-200 pt-2.5 mt-2.5 flex justify-between">
+                    <span className="text-xs text-gray-500">Remaining on delivery</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      ₹{Math.max(0, finalPayable - 200).toLocaleString()}
+                    </span>
+                  </div>
+                )}
                 {couponDiscount > 0 && (
                   <p className="text-xs text-green-600 font-medium">You save ₹{couponDiscount.toLocaleString()}!</p>
                 )}
@@ -1019,7 +1125,8 @@ const Checkout = () => {
                     />
                     <div className="flex-1">
                       <div className="text-sm font-medium text-gray-900">Cash on Delivery</div>
-                      <div className="text-xs text-gray-500 mt-0.5">Pay when you receive your order</div>
+                      <div className="text-xs text-gray-500 mt-0.5">Pay ₹200 advance online, remaining on delivery</div>
+                      <div className="text-xs text-gray-600 mt-1">Advance amount is non-refundable</div>
                     </div>
                   </label>
                 </div>

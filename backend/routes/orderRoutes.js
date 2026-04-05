@@ -121,7 +121,7 @@ router.post('/create', protect, async (req, res) => {
       user: req.user._id
     });
     
-    const { shippingAddress, paymentMethod = 'COD', couponCode } = req.body;
+    const { shippingAddress, paymentMethod = 'COD', couponCode, advancePayment } = req.body;
 
     const cart = await Cart.findOne({ user: req.user._id });
     console.log('Cart found:', cart ? `Items: ${cart.items.length}` : 'No cart found');
@@ -204,6 +204,7 @@ router.post('/create', protect, async (req, res) => {
       coupon: appliedCouponCode ? { code: appliedCouponCode, discount: couponDiscount } : { code: '', discount: 0 },
       shippingAddress: shippingAddress || req.user.address || {},
       paymentMethod,
+      advancePayment: advancePayment || null,
     });
 
     console.log('Order created successfully:', order._id);

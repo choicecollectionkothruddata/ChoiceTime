@@ -79,6 +79,107 @@ export function appendParcelGuruEvent(order, { status, datetime, message, awb_nu
   order.parcelGuru.events = events.length > MAX_EVENTS ? events.slice(-MAX_EVENTS) : events;
 }
 
+function splitPersonName(full) {
+  const s = String(full || '').trim();
+  if (!s) return { first: '', last: '' };
+  const i = s.indexOf(' ');
+  if (i === -1) return { first: s, last: '' };
+  return { first: s.slice(0, i).trim(), last: s.slice(i + 1).trim() };
+}
+
+/**
+ * Build Channel API body for POST /api/v1/channel/orders/create.
+ * order_id must match ParcelGuru webhook order_id (we use parcelGuru.orderReference → Mongo _id).
+ */
+export function buildParcelGuruOrderPayload(order, { customerEmail = '' } = {}) {
+  const addr = order.shippingAddress || {};
+  const { first: shipFirst, last: shipLast } = splitPersonName(addr.name);
+  const ref = (order.parcelGuru && order.parcelGuru.orderReference) || String(order._id);
+
+  const line_items = (order.items || []).map((item, idx) => {
+    const p = item.product && typeof item.product === 'object' ? item.product : {};
+    const title = p.name || p.title || 'Product';
+    const sku = p.sku || p.model || `SKU${idx + 1}`;
+    const pid = p._id != null ? String(p._id) : String(idx + 1);
+    return {
+      id: pid,
+      sku: String(sku).slice(0, 64),
+      title: String(title).slice(0, 500),
+      quantity: item.quantity,
+      price: String(item.price ?? p.price ?? 0),
+      weight: '500',
+    };
+  });
+
+  const { first: custFirst, last: custLast } = splitPersonName(addr.name);
+
+  return {
+    order_id: ref,
+    order_date: new Date().toISOString(),
+    order_status: 'paid',
+    package_type: 'prepaid',
+    package_declared_value: String(order.totalAmount ?? 0),
+    package_collectable_amount: '0',
+    package_weight: '0.5',
+    package_length: '15',
+    package_breadth: '10',
+    package_height: '10',
+    line_items,
+    shipping_address: {
+      first_name: shipFirst,
+      last_name: shipLast,
+      address1: String(addr.address || ''),
+      city: String(addr.city || ''),
+      state: String(addr.state || ''),
+      country: String(addr.country || 'India'),
+      pincode: String(addr.zipCode || ''),
+    },
+    customer: {
+      first_name: custFirst,
+      last_name: custLast,
+      phone: String(addr.phone || ''),
+      email: String(customerEmail || ''),
+    },
+  };
+}
+
+/**
+ * ParcelGuru Channel plugin: create order (after payment).
+ * Reads env at call time so PM2/dotenv always sees loaded variables.
+ */
+export async function pushOrder(orderData) {
+  const base = getParcelGuruBaseUrl();
+  const key = (process.env.PARCELGURU_API_KEY || '').trim();
+  if (!base || !key) {
+    console.warn('ParcelGuru push skipped: PARCELGURU_BASE_URL or PARCELGURU_API_KEY missing');
+    return { status: 'skipped', message: 'ParcelGuru env not configured' };
+  }
+
+  const url = `${base}/api/v1/channel/orders/create`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-parcelguru-key': key,
+      'x-parcelguru-api-version': 'v1',
+      'x-parcelguru-topic': 'myparcelguru.v1.order_processed',
+    },
+    body: JSON.stringify(orderData),
+  });
+
+  const text = await res.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = { raw: text };
+  }
+  if (!res.ok) {
+    console.error('ParcelGuru push HTTP error:', res.status, data);
+  }
+  return data;
+}
+
 export async function applyParcelGuruWebhookPayload(body) {
   const { event, order_id, awb_number } = body || {};
   if (!event || typeof event !== 'object') {

@@ -7,6 +7,7 @@ import Setting from '../models/Setting.js';
 import { protect } from '../middleware/authMiddleware.js';
 import dotenv from 'dotenv';
 import { COD_ADVANCE_PAISE } from '../config/paymentConstants.js';
+import { buildParcelGuruOrderPayload, pushOrder } from '../services/parcelGuru.js';
 
 dotenv.config();
 
@@ -229,6 +230,16 @@ router.post('/verify-payment', protect, async (req, res) => {
     order.status = 'processing';
     order.paymentStatus = 'paid';
     await order.save();
+
+    try {
+      const parcelGuruPayload = buildParcelGuruOrderPayload(order, {
+        customerEmail: req.user?.email || '',
+      });
+      const pgResult = await pushOrder(parcelGuruPayload);
+      console.log('ParcelGuru push result:', pgResult);
+    } catch (pgError) {
+      console.error('ParcelGuru push failed:', pgError);
+    }
 
     // Clear cart
     const cart = await Cart.findOne({ user: req.user._id });

@@ -74,7 +74,10 @@ function canReturnOrder(order) {
 
 // OrderRow component for displaying order with return
 const OrderRow = ({ order, user, canReturn, alreadyRequested, returnStatus, returnRejectReason, onOpenReturn, onOpenCancelModal }) => {
-  const canCancel = order?.status === 'pending' || order?.status === 'processing';
+  const canCancel =
+    order?.status === 'pending' ||
+    order?.status === 'processing' ||
+    order?.status === 'shipped';
 
   return (
     <tr className="hover:bg-gray-50/50 transition-colors">
@@ -342,7 +345,17 @@ const Profile = () => {
     try {
       const res = await orderAPI.cancelOrder(cancelModalOrder._id, { reason: cancelReason.trim() });
       if (res?.success) {
-        setSuccess('Order cancelled.');
+        const ref = res?.data?.refund;
+        let msg = 'Order cancelled.';
+        if (ref?.amountRupees != null && Number(ref.amountRupees) > 0) {
+          msg = `Order cancelled. Refund of ₹${Number(ref.amountRupees).toLocaleString('en-IN')} is being processed.`;
+        } else if (
+          ref?.skipped === 'cod_post_dispatch_no_advance_refund' ||
+          ref?.skipped === 'zero_refund_amount'
+        ) {
+          msg = 'Order cancelled. No payment refund applies for this cancellation (per policy).';
+        }
+        setSuccess(msg);
         setCancelModalOrder(null);
         setCancelReason('');
         await loadProfile();

@@ -87,6 +87,18 @@ const OrderDetail = () => {
     });
   };
 
+  const codAdvance = order?.advancePayment;
+  const codAdvancePaid =
+    order?.paymentMethod === 'COD' &&
+    codAdvance &&
+    codAdvance.status === 'paid' &&
+    Number(codAdvance.amount) > 0;
+  const codAdvanceAmount = codAdvancePaid ? Number(codAdvance.amount) : 0;
+  const codDueOnDelivery =
+    codAdvancePaid && order?.totalAmount != null
+      ? Math.max(0, Number(order.totalAmount) - codAdvanceAmount)
+      : null;
+
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'delivered':
@@ -372,6 +384,25 @@ const OrderDetail = () => {
                     ₹{order.totalAmount?.toLocaleString()}
                   </span>
                 </div>
+                {codAdvancePaid && (
+                  <>
+                    <div className="flex justify-between text-sm pt-2 border-t border-dashed border-gray-200">
+                      <span className="text-green-700 flex items-center gap-1.5">
+                        <CheckCircle className="w-4 h-4 shrink-0" />
+                        Advance paid online
+                      </span>
+                      <span className="font-medium text-green-700">
+                        ₹{codAdvanceAmount.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Due on delivery (COD)</span>
+                      <span className="font-semibold text-gray-900">
+                        ₹{codDueOnDelivery?.toLocaleString()}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -386,16 +417,62 @@ const OrderDetail = () => {
                     <CheckCircle className="w-5 h-5 text-gray-600" />
                   )}
                 </div>
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="font-medium text-gray-900">
                     {order.paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online Payment'}
                   </p>
-                  <p className="text-sm text-gray-600">
-                    {order.paymentMethod === 'COD' ? 'Pay when you receive your order' : 'Paid online'}
-                  </p>
+                  {codAdvancePaid ? (
+                    <div className="text-sm text-gray-600 mt-1 space-y-0.5">
+                      <p className="text-green-700 font-medium">
+                        ₹{codAdvanceAmount.toLocaleString()} advance paid online
+                      </p>
+                      <p>
+                        ₹{codDueOnDelivery?.toLocaleString()} to pay when you receive your order
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600 mt-1">
+                      {order.paymentMethod === 'COD' ? 'Pay when you receive your order' : 'Paid online'}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
+
+            {(order.parcelGuru?.awbNumber || order.parcelGuru?.shipmentStatus) && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Truck className="w-5 h-5 text-gray-600" />
+                  Shipment tracking
+                </h3>
+                <div className="space-y-2 text-sm">
+                  {order.parcelGuru?.awbNumber && (
+                    <div className="flex justify-between gap-2">
+                      <span className="text-gray-600">AWB / Tracking</span>
+                      <span className="font-mono font-medium text-gray-900 text-right break-all">
+                        {order.parcelGuru.awbNumber}
+                      </span>
+                    </div>
+                  )}
+                  {order.parcelGuru?.shipmentStatus && (
+                    <div className="flex justify-between gap-2">
+                      <span className="text-gray-600">Status</span>
+                      <span className="font-medium text-gray-900 text-right capitalize">
+                        {String(order.parcelGuru.shipmentStatus).replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                  )}
+                  {order.parcelGuru?.lastMessage && (
+                    <p className="text-xs text-gray-500 pt-1 border-t border-gray-100">{order.parcelGuru.lastMessage}</p>
+                  )}
+                  {order.parcelGuru?.lastEventAt && (
+                    <p className="text-xs text-gray-400">
+                      Updated {formatDate(order.parcelGuru.lastEventAt)} {formatTime(order.parcelGuru.lastEventAt)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

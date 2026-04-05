@@ -12,8 +12,9 @@ export default defineConfig({
   },
   proxy: {
     '/api': {
-      target: 'https://api.choicetime.in',
+      // Local backend — override with VITE_DEV_PROXY_TARGET=http://localhost:PORT if needed
+      target: process.env.VITE_DEV_PROXY_TARGET || 'http://localhost:5000',
       changeOrigin: true,
     },
-  }
+  },
 })

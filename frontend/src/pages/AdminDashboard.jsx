@@ -41,12 +41,6 @@ const IconOrders = (props) => (
   </svg>
 );
 
-const IconStatus = (props) => (
-  <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-  </svg>
-);
-
 const IconUsers = (props) => (
   <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -103,7 +97,6 @@ const menuItems = [
   { id: 'categories', label: 'Nav Categories', icon: IconCategories },
   { id: 'home-reels', label: 'Home Page Reels', icon: IconReels },
   { id: 'orders', label: 'Manage Orders', icon: IconOrders },
-  { id: 'order-status', label: 'Order Status', icon: IconStatus },
   { id: 'coupons', label: 'Coupons', icon: IconCoupon },
   { id: 'shipping-returns', label: 'Shipping & Returns', icon: IconShippingReturns },
   { id: 'return-orders', label: 'Return Order Management', icon: IconReturnOrders },
@@ -247,6 +240,8 @@ const AdminDashboard = () => {
 
   // Manage Orders: selected order for detail view (modal)
   const [selectedOrderDetail, setSelectedOrderDetail] = useState(null);
+  const [parcelGuruRefDraft, setParcelGuruRefDraft] = useState('');
+  const [parcelGuruRefSaving, setParcelGuruRefSaving] = useState(false);
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [productSearchQuery, setProductSearchQuery] = useState('');
 
@@ -278,6 +273,17 @@ const AdminDashboard = () => {
     });
   }, [orders, orderSearchQuery]);
 
+  useEffect(() => {
+    if (!selectedOrderDetail) {
+      setParcelGuruRefDraft('');
+      return;
+    }
+    setParcelGuruRefDraft(
+      (selectedOrderDetail.parcelGuru && selectedOrderDetail.parcelGuru.orderReference) ||
+        String(selectedOrderDetail._id || '')
+    );
+  }, [selectedOrderDetail]);
+
   const showSuccessPopup = (text) => {
     setSuccessPopup({ show: true, text });
     setTimeout(() => setSuccessPopup({ show: false, text: '' }), 2500);
@@ -296,9 +302,12 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (!isAdmin) return;
-    if (activeSection === 'dashboard' || activeSection === 'orders' || activeSection === 'order-status') {
+    if (activeSection === 'dashboard' || activeSection === 'orders') {
       fetchSummary();
       fetchOrders();
+    }
+    if (activeSection === 'orders') {
+      fetchShippingConfig();
     }
     if (activeSection === 'products' || activeSection === 'add-product' || activeSection === 'edit-product') {
       fetchProducts(productCategory);
@@ -1090,6 +1099,30 @@ const AdminDashboard = () => {
       fetchOrders();
     } catch (error) {
       setMessage({ type: 'error', text: error.message || 'Failed to update order' });
+    }
+  };
+
+  const handleSaveParcelGuruReference = async () => {
+    if (!selectedOrderDetail?._id) return;
+    const ref = parcelGuruRefDraft.trim();
+    if (!ref) {
+      setMessage({ type: 'error', text: 'ParcelGuru order reference cannot be empty' });
+      return;
+    }
+    setParcelGuruRefSaving(true);
+    try {
+      const res = await adminAPI.updateOrderParcelGuruReference(selectedOrderDetail._id, ref);
+      if (res.success && res.data?.order) {
+        setSelectedOrderDetail(res.data.order);
+        setMessage({ type: 'success', text: 'ParcelGuru order reference saved' });
+        fetchOrders();
+      } else {
+        setMessage({ type: 'error', text: res.message || 'Failed to save' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message || 'Failed to save' });
+    } finally {
+      setParcelGuruRefSaving(false);
     }
   };
 
@@ -3590,6 +3623,7 @@ const AdminDashboard = () => {
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Pay</th>
                         <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Total</th>
                         <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
                       </tr>
@@ -3634,6 +3668,13 @@ const AdminDashboard = () => {
                               {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || 'Pending'}
                             </span>
                           </td>
+                          <td className="px-4 py-3 text-xs text-gray-700 whitespace-nowrap">
+                            {String(order.paymentMethod || 'COD').toLowerCase() === 'cod' ? (
+                              <span title="Cash on Delivery">COD</span>
+                            ) : (
+                              <span title="Paid online">Online</span>
+                            )}
+                          </td>
                           <td className="px-4 py-3 text-sm font-medium text-gray-900 text-right whitespace-nowrap">
                             ₹{order.totalAmount?.toLocaleString() || '0'}
                           </td>
@@ -3660,6 +3701,30 @@ const AdminDashboard = () => {
                 <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full my-8 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                   {(() => {
                     const order = selectedOrderDetail;
+                    const payMethod = String(order.paymentMethod || 'COD').toLowerCase();
+                    const isCod = payMethod === 'cod';
+                    const isOnline = payMethod === 'razorpay' || payMethod === 'online';
+                    const adv = order.advancePayment;
+                    const advAmount = Number(adv?.amount) || 0;
+                    const advPaid = adv?.status === 'paid' && advAmount > 0;
+                    const orderTotal = Number(order.totalAmount) || 0;
+                    const codDueOnDelivery =
+                      isCod && orderTotal > 0 ? Math.max(0, orderTotal - (advPaid ? advAmount : 0)) : null;
+                    const lineSubtotal = (order.items || []).reduce(
+                      (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 0),
+                      0
+                    );
+                    const couponDisc = Number(order.coupon?.discount) || 0;
+                    const afterCoupon = Math.max(0, lineSubtotal - couponDisc);
+                    const computedShipping = Math.max(0, orderTotal - afterCoupon);
+                    const threshold = Number(shippingConfig.freeShippingThreshold) || 2000;
+                    const shippingLineLabel =
+                      computedShipping === 0
+                        ? afterCoupon >= threshold
+                          ? `Free (subtotal after coupon ≥ ₹${threshold.toLocaleString()})`
+                          : '₹0 (free or waived at checkout)'
+                        : '';
+                    const totalsMatch = Math.round(afterCoupon + computedShipping) === Math.round(orderTotal);
                     return (
                       <>
                         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center rounded-t-xl z-10">
@@ -3722,13 +3787,158 @@ const AdminDashboard = () => {
                               </div>
                             )}
                           </div>
-                          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-200">
-                            <div>
-                              <p className="text-xs text-gray-500 uppercase">Total</p>
-                              <p className="text-xl font-bold text-gray-900">₹{order.totalAmount?.toLocaleString() || '0'}</p>
-                              {order.coupon?.code && <p className="text-xs text-green-600">Coupon: {order.coupon.code} (-₹{order.coupon.discount})</p>}
+
+                          {/* Payment — how paid, advance, balance */}
+                          <div className="pt-4 border-t border-gray-200">
+                            <h4 className="text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">Payment</h4>
+                            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm space-y-2">
+                              <div className="flex justify-between gap-2">
+                                <span className="text-gray-600">Method</span>
+                                <span className="font-medium text-gray-900 text-right">
+                                  {isCod ? 'Cash on Delivery' : isOnline ? 'Online (Razorpay)' : order.paymentMethod || '—'}
+                                </span>
+                              </div>
+                              {isCod && (
+                                <>
+                                  {advPaid ? (
+                                    <div className="flex justify-between gap-2 text-green-700">
+                                      <span>Advance paid online</span>
+                                      <span className="font-semibold">₹{advAmount.toLocaleString()}</span>
+                                    </div>
+                                  ) : (
+                                    <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+                                      No online advance recorded (older order or pending capture).
+                                    </p>
+                                  )}
+                                  <div className="flex justify-between gap-2 pt-1 border-t border-slate-200">
+                                    <span className="text-gray-600">Due on delivery (COD)</span>
+                                    <span className="font-semibold text-gray-900">
+                                      ₹{codDueOnDelivery != null ? codDueOnDelivery.toLocaleString() : '—'}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between gap-2 text-xs text-gray-500">
+                                    <span>Order total</span>
+                                    <span>₹{orderTotal.toLocaleString()}</span>
+                                  </div>
+                                </>
+                              )}
+                              {isOnline && (
+                                <>
+                                  <div className="flex justify-between gap-2">
+                                    <span className="text-gray-600">Payment status</span>
+                                    <span
+                                      className={`font-medium ${
+                                        order.paymentStatus === 'paid' ? 'text-green-700' : 'text-amber-700'
+                                      }`}
+                                    >
+                                      {order.paymentStatus === 'paid'
+                                        ? 'Paid in full online'
+                                        : order.paymentStatus || '—'}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between gap-2">
+                                    <span className="text-gray-600">Amount collected</span>
+                                    <span className="font-semibold text-gray-900">₹{orderTotal.toLocaleString()}</span>
+                                  </div>
+                                  {order.paymentId && (
+                                    <p className="text-xs text-gray-500 font-mono break-all pt-1">
+                                      Razorpay payment: {order.paymentId}
+                                    </p>
+                                  )}
+                                </>
+                              )}
                             </div>
-                            <div className="flex gap-2">
+                          </div>
+
+                          <div className="pt-4 border-t border-gray-200">
+                            <h4 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">ParcelGuru</h4>
+                            <p className="text-xs text-gray-500 mb-3">
+                              Webhook: <code className="bg-gray-100 px-1 rounded text-[11px]">POST …/api/v1/channel/event/hook</code> with header{' '}
+                              <code className="bg-gray-100 px-1 rounded text-[11px]">x-access-token</code> (use{' '}
+                              <code className="bg-gray-100 px-1 rounded text-[11px]">PARCELGURU_API_KEY</code> or{' '}
+                              <code className="bg-gray-100 px-1 rounded text-[11px]">PARCELGURU_WEBHOOK_TOKEN</code>).
+                            </p>
+                            {(order.parcelGuru?.awbNumber || order.parcelGuru?.shipmentStatus) && (
+                              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-sm mb-3 space-y-1">
+                                {order.parcelGuru?.awbNumber ? (
+                                  <div>
+                                    <span className="text-gray-600">AWB: </span>
+                                    <span className="font-mono font-medium text-gray-900">{order.parcelGuru.awbNumber}</span>
+                                  </div>
+                                ) : null}
+                                {order.parcelGuru?.shipmentStatus ? (
+                                  <div>
+                                    <span className="text-gray-600">Shipment status: </span>
+                                    <span className="font-medium text-gray-900">{order.parcelGuru.shipmentStatus}</span>
+                                  </div>
+                                ) : null}
+                                {order.parcelGuru?.lastMessage ? (
+                                  <p className="text-xs text-gray-600">{order.parcelGuru.lastMessage}</p>
+                                ) : null}
+                              </div>
+                            )}
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">
+                              Order ID sent to ParcelGuru (must match webhook <code className="font-mono text-[11px]">order_id</code>)
+                            </label>
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <input
+                                type="text"
+                                value={parcelGuruRefDraft}
+                                onChange={(e) => setParcelGuruRefDraft(e.target.value)}
+                                className="flex-1 text-sm border border-gray-300 px-3 py-2 rounded-lg font-mono"
+                                placeholder="MongoDB _id or custom reference"
+                              />
+                              <button
+                                type="button"
+                                disabled={parcelGuruRefSaving}
+                                onClick={handleSaveParcelGuruReference}
+                                className="px-4 py-2 bg-gray-900 text-white text-xs font-semibold rounded-lg hover:bg-gray-800 disabled:opacity-50 whitespace-nowrap"
+                              >
+                                {parcelGuruRefSaving ? 'Saving…' : 'Save reference'}
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2 break-all">
+                              Shop order ID: <span className="font-mono">{String(order._id)}</span>. Enter the same value as ParcelGuru shipment <span className="font-mono">order_id</span> (or save a custom reference above).
+                            </p>
+                          </div>
+
+                          <div className="pt-4 border-t border-gray-200">
+                            <h4 className="text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">Order summary (how total is built)</h4>
+                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm space-y-2">
+                              <div className="flex justify-between gap-2">
+                                <span className="text-gray-600">Subtotal (items)</span>
+                                <span className="font-medium text-gray-900">₹{lineSubtotal.toLocaleString()}</span>
+                              </div>
+                              {couponDisc > 0 && (
+                                <div className="flex justify-between gap-2 text-green-700">
+                                  <span>Coupon discount{order.coupon?.code ? ` (${order.coupon.code})` : ''}</span>
+                                  <span className="font-medium">−₹{couponDisc.toLocaleString()}</span>
+                                </div>
+                              )}
+                              <div className="flex justify-between gap-2">
+                                <span className="text-gray-600">After discount</span>
+                                <span className="font-medium text-gray-900">₹{afterCoupon.toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between gap-2">
+                                <span className="text-gray-600">Shipping</span>
+                                <span className={`font-medium text-right ${computedShipping === 0 ? 'text-green-700' : 'text-gray-900'}`}>
+                                  {computedShipping === 0 ? shippingLineLabel : `₹${computedShipping.toLocaleString()}`}
+                                </span>
+                              </div>
+                              <div className="flex justify-between gap-2 pt-2 border-t border-gray-300 text-base font-bold">
+                                <span className="text-gray-900">Order total</span>
+                                <span className="text-gray-900">₹{orderTotal.toLocaleString()}</span>
+                              </div>
+                              {!totalsMatch && (
+                                <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 mt-1">
+                                  Subtotal + shipping does not match stored total — item prices may have changed after this order was placed.
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-gray-200">
+                            <div className="flex gap-2 w-full sm:w-auto justify-end">
                               <select
                                 value={order.status || 'pending'}
                                 onChange={(e) => handleOrderStatusChange(order._id, e.target.value)}
@@ -3777,143 +3987,6 @@ const AdminDashboard = () => {
                     );
                   })()}
                 </div>
-              </div>
-            )}
-          </div>
-        );
-
-      case 'order-status':
-        return (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Order Status Management</h2>
-              <button
-                onClick={fetchOrders}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 w-full sm:w-auto rounded-lg"
-              >
-                Refresh
-              </button>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-              <div className="relative flex-1 max-w-md">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                </span>
-                <input
-                  type="text"
-                  placeholder="Search by Order ID, customer, email, status, total..."
-                  value={orderSearchQuery}
-                  onChange={(e) => setOrderSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              {orderSearchQuery.trim() && (
-                <span className="text-sm text-gray-500">
-                  {filteredOrdersForSearch.length} of {(orders || []).length} orders
-                </span>
-              )}
-            </div>
-            {(orders || []).length === 0 ? (
-              <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
-                <p className="text-gray-500 text-sm">No orders yet</p>
-              </div>
-            ) : filteredOrdersForSearch.length === 0 ? (
-              <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
-                <p className="text-gray-500 text-sm">No orders match your search</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-6">
-                {filteredOrdersForSearch.map((order) => (
-                  <div key={order._id} className="bg-white border border-gray-200">
-                    <div className="px-4 sm:px-6 py-4">
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div className="flex-1 w-full space-y-3">
-                          <div className="flex flex-wrap items-center gap-3">
-                            <h3 className="font-bold text-gray-900 text-base sm:text-lg">
-                              Order #{order._id?.slice(-8)?.toUpperCase() || 'N/A'}
-                            </h3>
-                            <span
-                              className={`px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
-                                order.status === 'delivered'
-                                  ? 'bg-green-100 text-green-800'
-                                  : order.status === 'shipped'
-                                  ? 'bg-indigo-100 text-indigo-800'
-                                  : order.status === 'processing'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : order.status === 'cancelled'
-                                  ? 'bg-red-100 text-red-800'
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}
-                            >
-                              {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || 'Pending'}
-                            </span>
-                            {order.status === 'cancelled' && order.cancelReason && (
-                              <p className="text-xs text-red-700 mt-1 w-full" title={order.cancelReason}>
-                                Reason: {order.cancelReason}
-                              </p>
-                            )}
-                          </div>
-                          <div className="space-y-1 text-sm">
-                            <div>
-                              <span className="text-gray-600">Customer:</span>
-                              <span className="ml-2 font-medium text-gray-900">
-                                {order.user?.name || 'Guest'}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Email:</span>
-                              <span className="ml-2 text-gray-900">{order.user?.email || 'N/A'}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Date:</span>
-                              <span className="ml-2 text-gray-900">
-                                {new Date(order.orderDate || order.createdAt).toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: 'numeric',
-                                })}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Items:</span>
-                              <span className="ml-2 font-medium text-gray-900">
-                                {order.items?.length || 0} item(s)
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-end gap-3 w-full sm:w-auto">
-                          <div className="text-right">
-                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Amount</p>
-                            <p className="text-xl font-bold text-gray-900">
-                              ₹{order.totalAmount?.toLocaleString() || '0'}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => handleDeleteOrder(order._id)}
-                            className="px-4 py-2 bg-red-600 text-white text-xs font-semibold hover:bg-red-700 whitespace-nowrap w-full sm:w-auto"
-                          >
-                            Delete Order
-                          </button>
-                        </div>
-                      </div>
-                      <div className="mt-4 pt-4 border-t border-gray-200">
-                        <label className="block text-sm font-semibold text-gray-900 mb-2">Update Order Status:</label>
-                        <select
-                          value={order.status || 'pending'}
-                          onChange={(e) => handleOrderStatusChange(order._id, e.target.value)}
-                          className="text-sm border border-gray-300 px-4 py-2 w-full sm:w-64 bg-white"
-                        >
-                          {statusOptions.map((status) => (
-                            <option key={status} value={status}>
-                              {status.charAt(0).toUpperCase() + status.slice(1)}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                ))}
               </div>
             )}
           </div>

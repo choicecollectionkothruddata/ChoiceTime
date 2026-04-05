@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Order from '../models/Order.js';
+import { applyCancellationRefunds } from '../services/orderCancellationRefunds.js';
 import Product from '../models/Product.js';
 import Category from '../models/Category.js';
 import Review from '../models/Review.js';
@@ -92,6 +93,18 @@ export const updateOrderStatus = async (req, res) => {
       });
     }
 
+    const previousStatus = order.status;
+
+    if (status === 'cancelled' && previousStatus !== 'cancelled') {
+      const refundResult = await applyCancellationRefunds(order, previousStatus);
+      if (!refundResult.ok) {
+        return res.status(502).json({
+          success: false,
+          message: refundResult.error || 'Refund failed. Order status was not changed.',
+        });
+      }
+    }
+
     order.status = status;
     order.deliveredDate = status === 'delivered' ? new Date() : order.deliveredDate;
     await order.save();
@@ -105,6 +118,40 @@ export const updateOrderStatus = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error updating order status',
+      error: error.message,
+    });
+  }
+};
+
+/** Must match ParcelGuru shipment "order_id" in webhooks if not using MongoDB _id. */
+export const updateOrderParcelGuruReference = async (req, res) => {
+  try {
+    const orderReference = typeof req.body.orderReference === 'string' ? req.body.orderReference.trim() : '';
+    if (!orderReference) {
+      return res.status(400).json({
+        success: false,
+        message: 'orderReference is required',
+      });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (!order.parcelGuru) order.parcelGuru = {};
+    order.parcelGuru.orderReference = orderReference;
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'ParcelGuru order reference updated',
+      data: { order },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error updating ParcelGuru reference',
       error: error.message,
     });
   }

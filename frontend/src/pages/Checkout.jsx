@@ -21,6 +21,8 @@ const Checkout = () => {
   const [isProcessingOrder, setIsProcessingOrder] = useState(false); // Show processing state
   const [processingStep, setProcessingStep] = useState(0); // Track processing steps
   const [orderData, setOrderData] = useState(null); // Store order data for success page
+  /** COD advance in ₹ — from GET /payment/cod-advance (same server as Razorpay create-order) */
+  const [codAdvanceRupees, setCodAdvanceRupees] = useState(null);
 
   // Coupon state
   const [couponCode, setCouponCode] = useState('');
@@ -159,6 +161,23 @@ const Checkout = () => {
     loadAvailableCoupons();
   }, [isAuthenticated, cart.length, navigate, isPlacingOrder]);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await paymentAPI.getCodAdvanceConfig();
+        if (cancelled || !res?.success || res.data?.rupees == null) return;
+        const r = Number(res.data.rupees);
+        if (Number.isFinite(r) && r >= 0) setCodAdvanceRupees(r);
+      } catch (e) {
+        console.error('COD advance config:', e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setShippingAddress((prev) => ({ ...prev, [name]: value }));
@@ -273,8 +292,6 @@ const Checkout = () => {
       throw new Error('Payment gateway is not available. Please refresh the page and try again.');
     }
 
-    // Backend creates Razorpay order for fixed COD advance (₹200)
-    const advanceAmount = 200;
     const response = await paymentAPI.createRazorpayOrder({
       purpose: 'cod_advance',
       shippingAddress,
@@ -285,22 +302,21 @@ const Checkout = () => {
     }
 
     const { orderId, amount, currency, key } = response.data;
-
-    // With order_id, Razorpay uses the server-created order amount — wrong API = full cart total
-    if (Number(amount) !== advanceAmount * 100) {
-      throw new Error(
-        `COD advance must be ₹${advanceAmount}, but the API returned ₹${Number(amount) / 100}. ` +
-          'Your frontend may be calling an old server: use the latest backend, or in dev set VITE_API_BASE_URL=http://localhost:5000 in frontend/.env.development and run the API locally, then restart Vite.'
-      );
+    const amountPaise = Number(amount);
+    if (!Number.isFinite(amountPaise) || amountPaise < 1) {
+      throw new Error('Invalid advance amount from server. Check backend payment config.');
     }
+    // Rupees actually charged (source of truth = API, avoids local/backend version mismatch)
+    const advanceAmountPaid = amountPaise / 100;
+    setCodAdvanceRupees(advanceAmountPaid);
 
     // Razorpay options for COD advance payment
     const options = {
       key: key,
-      amount: amount,
+      amount: amountPaise,
       currency: currency,
       name: 'ChoiceTime',
-      description: `COD Advance Payment - ₹${advanceAmount}`,
+      description: `COD Advance Payment - ₹${advanceAmountPaid}`,
       order_id: orderId,
       handler: async function (response) {
         try {
@@ -322,7 +338,7 @@ const Checkout = () => {
               appliedCoupon?.code || '',
               {
                 advancePayment: {
-                  amount: advanceAmount,
+                  amount: advanceAmountPaid,
                   razorpayOrderId: response.razorpay_order_id,
                   razorpayPaymentId: response.razorpay_payment_id,
                   razorpaySignature: response.razorpay_signature
@@ -388,8 +404,9 @@ const Checkout = () => {
       setProcessingStep(0);
     });
     razorpay.open();
-    // handlePayment leaves loading true; Razorpay modal is open — stop spinner so UI is not stuck
+    // Razorpay modal is open — release checkout UI (button was disabled via isPlacingOrder)
     setLoading(false);
+    setIsPlacingOrder(false);
   };
 
   const handleOnlinePayment = async () => {
@@ -498,6 +515,7 @@ const Checkout = () => {
     });
     razorpay.open();
     setLoading(false);
+    setIsPlacingOrder(false);
   };
 
   // Don't return null if we're placing an order (to show the modal)
@@ -1066,7 +1084,9 @@ const Checkout = () => {
                 {paymentMethod === 'cod' && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">COD Advance Payment</span>
-                    <span className="font-medium text-blue-600">₹200</span>
+                    <span className="font-medium text-blue-600">
+                      ₹{codAdvanceRupees == null ? '…' : codAdvanceRupees}
+                    </span>
                   </div>
                 )}
                 <div className="border-t border-gray-200 pt-2.5 mt-2.5 flex justify-between">
@@ -1074,14 +1094,14 @@ const Checkout = () => {
                     {paymentMethod === 'cod' ? 'Payable Now' : 'Total'}
                   </span>
                   <span className="text-lg font-semibold text-gray-900">
-                    ₹{paymentMethod === 'cod' ? '200' : finalPayable.toLocaleString()}
+                    ₹{paymentMethod === 'cod' ? (codAdvanceRupees == null ? '…' : codAdvanceRupees) : finalPayable.toLocaleString()}
                   </span>
                 </div>
                 {paymentMethod === 'cod' && (
                   <div className="border-t border-gray-200 pt-2.5 mt-2.5 flex justify-between">
                     <span className="text-xs text-gray-500">Remaining on delivery</span>
                     <span className="text-sm font-medium text-gray-700">
-                      ₹{Math.max(0, finalPayable - 200).toLocaleString()}
+                      ₹{codAdvanceRupees == null ? '…' : Math.max(0, finalPayable - codAdvanceRupees).toLocaleString()}
                     </span>
                   </div>
                 )}
@@ -1131,7 +1151,9 @@ const Checkout = () => {
                     />
                     <div className="flex-1">
                       <div className="text-sm font-medium text-gray-900">Cash on Delivery</div>
-                      <div className="text-xs text-gray-500 mt-0.5">Pay ₹200 advance online, remaining on delivery</div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        Pay ₹{codAdvanceRupees == null ? '…' : codAdvanceRupees} advance online, remaining on delivery
+                      </div>
                       <div className="text-xs text-gray-600 mt-1">Advance amount is non-refundable</div>
                     </div>
                   </label>

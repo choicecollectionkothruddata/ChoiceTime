@@ -114,6 +114,60 @@ const orderSchema = new mongoose.Schema({
   cancelledAt: {
     type: Date,
   },
+  cancellationRefund: {
+    razorpayRefundId: {
+      type: String,
+      default: '',
+    },
+    amountRupees: {
+      type: Number,
+    },
+    at: {
+      type: Date,
+    },
+  },
+  parcelGuru: {
+    orderReference: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    awbNumber: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    shipmentStatus: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    lastMessage: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    lastEventAt: {
+      type: Date,
+    },
+    events: [
+      {
+        status: { type: String, default: '' },
+        datetime: { type: Date },
+        message: { type: String, default: '' },
+        awb_number: { type: String, default: '' },
+      },
+    ],
+  },
+});
+
+orderSchema.pre('save', function parcelGuruRef(next) {
+  if (!this.parcelGuru) this.parcelGuru = {};
+  const ref = this.parcelGuru.orderReference;
+  if (ref === undefined || ref === null || String(ref).trim() === '') {
+    this.parcelGuru.orderReference = this._id ? String(this._id) : '';
+  }
+  next();
 });
 
 const Order = mongoose.model('Order', orderSchema);

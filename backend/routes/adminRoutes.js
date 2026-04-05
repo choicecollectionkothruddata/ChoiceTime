@@ -5,6 +5,7 @@ import {
   getDashboardSummary,
   getAllOrders,
   updateOrderStatus,
+  updateOrderParcelGuruReference,
   deleteOrder,
   getAdminProducts,
   createProduct,
@@ -39,6 +40,7 @@ router.use(protect, adminOnly);
 router.get('/summary', getDashboardSummary);
 router.get('/orders', getAllOrders);
 router.patch('/orders/:id/status', updateOrderStatus);
+router.patch('/orders/:id/parcel-guru-reference', updateOrderParcelGuruReference);
 router.delete('/orders/:id', deleteOrder);
 
 router.get('/products', getAdminProducts);

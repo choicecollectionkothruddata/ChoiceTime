@@ -32,8 +32,8 @@ const Returns = () => {
             <div className="px-6 py-5">
               <h3 className="font-semibold text-gray-900 mb-3">Physical Products</h3>
               <ul className="space-y-2 text-gray-600">
-                <ArrowItem>Orders can be cancelled only before the item is shipped</ArrowItem>
-                <ArrowItem>Orders already shipped cannot be cancelled</ArrowItem>
+                <ArrowItem>You can cancel from your account while the order is pending, processing, or shipped (not after delivery)</ArrowItem>
+                <ArrowItem>Refund amounts depend on payment method and whether the order had already shipped — see below</ArrowItem>
               </ul>
             </div>
           </div>
@@ -58,10 +58,10 @@ const Returns = () => {
                 <div className="mt-4">
                   <h4 className="font-semibold text-gray-900 mb-1">Non-Refundable Charges</h4>
                   <p className="text-gray-600 leading-relaxed">
-                    <strong>COD Advance Payment:</strong> For Cash on Delivery orders, a non-refundable advance payment of <span className="font-semibold">₹200</span> is required online before order processing. This amount is <span className="font-semibold">strictly non-refundable</span> under any circumstances, including order cancellation, returns, or delays.
+                    <strong>COD Advance Payment:</strong> For Cash on Delivery orders, a small advance (<span className="font-semibold">₹1</span>) is paid online before processing. If you cancel <span className="font-semibold">before</span> the order is shipped, this advance is refunded automatically. After the order is shipped (or delivered), the advance is <span className="font-semibold">not</span> refunded on cancellation.
                   </p>
                   <p className="text-gray-600 leading-relaxed mt-2">
-                    <strong>Online Payment Cancellation:</strong> For online payment orders, if cancelled after confirmation, a cancellation charge of <span className="font-semibold">₹200</span> will be deducted from the refund. This amount is <span className="font-semibold">non-refundable</span>.
+                    <strong>Online Payment Cancellation:</strong> If you paid in full online: cancel <span className="font-semibold">before</span> shipment and the full payment is refunded. If the order was <span className="font-semibold">already shipped</span>, a cancellation charge of <span className="font-semibold">₹200</span> is deducted and the rest is refunded.
                   </p>
                 </div>
               </div>
@@ -69,7 +69,7 @@ const Returns = () => {
                 <h3 className="font-semibold text-gray-900 mb-2">Refund Process (When Applicable)</h3>
                 <p className="text-gray-600 leading-relaxed">
                   If any refund is approved, the amount will be credited back to the original payment method within 7-14 business days.
-                  Refunds, where applicable, exclude all non-refundable charges: COD advance payment (₹200) and cancellation charges (₹200 for online payments).
+                  Refunds follow the rules above: COD advance is kept only after shipment; ₹200 applies only to online orders cancelled after shipment.
                 </p>
               </div>
             </div>

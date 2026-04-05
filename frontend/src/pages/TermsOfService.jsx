@@ -28,7 +28,7 @@ const TermsOfService = () => {
     },
     {
       title: '7. Cash on Delivery (COD) Advance Payment',
-      content: 'For Cash on Delivery orders, customers are required to pay a non-refundable advance amount of ₹200 online before the order is processed. The remaining balance will be collected upon delivery. The advance payment is non-refundable under any circumstances, including order cancellation, returns, or delays. This policy helps us ensure genuine orders and efficient delivery management.'
+      content: 'For Cash on Delivery orders, customers pay a small advance (₹1) online before the order is processed; the rest is due on delivery. If you cancel before the order ships, the advance is refunded automatically. After shipment, the advance is not refunded on cancellation. See the Refund and Return Policy for full details.'
     },
     {
       title: '8. Lawful Use',

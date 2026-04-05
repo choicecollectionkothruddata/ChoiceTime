@@ -212,10 +212,14 @@ export const orderAPI = {
   getOrder: async (orderId) => {
     return apiRequest(`/orders/${orderId}`);
   },
-  cancelOrder: async (orderId, payload) => {
+  cancelOrder: async (orderId, payloadOrReason) => {
+    const body =
+      typeof payloadOrReason === 'string'
+        ? { reason: payloadOrReason }
+        : (payloadOrReason || {});
     return apiRequest(`/orders/${orderId}/cancel`, {
       method: 'PATCH',
-      body: JSON.stringify(payload || {}),
+      body: JSON.stringify(body),
     });
   },
 
@@ -225,21 +229,12 @@ export const orderAPI = {
       body: JSON.stringify({ shippingAddress, paymentMethod, couponCode, ...extras }),
     });
   },
-
-  getOrder: async (orderId) => {
-    return apiRequest(`/orders/${orderId}`);
-  },
-
-  cancelOrder: async (orderId, reason) => {
-    return apiRequest(`/orders/${orderId}/cancel`, {
-      method: 'POST',
-      body: JSON.stringify({ reason }),
-    });
-  },
 };
 
 // Payment API calls
 export const paymentAPI = {
+  getCodAdvanceConfig: async () => apiRequest('/payment/cod-advance'),
+
   /** Full prepay: pass shippingAddress object. COD advance: { purpose: 'cod_advance', shippingAddress }. */
   createRazorpayOrder: async (payload) => {
     const body =
@@ -355,6 +350,11 @@ export const adminAPI = {
     apiRequest(`/admin/orders/${orderId}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
+    }),
+  updateOrderParcelGuruReference: async (orderId, orderReference) =>
+    apiRequest(`/admin/orders/${orderId}/parcel-guru-reference`, {
+      method: 'PATCH',
+      body: JSON.stringify({ orderReference }),
     }),
   deleteOrder: async (orderId) =>
     apiRequest(`/admin/orders/${orderId}`, { method: 'DELETE' }),

@@ -4,6 +4,7 @@ import Cart from '../models/Cart.js';
 import Coupon from '../models/Coupon.js';
 import Setting from '../models/Setting.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { applyCancellationRefunds } from '../services/orderCancellationRefunds.js';
 
 const router = express.Router();
 const SHIPPING_CONFIG_KEY = 'shippingConfig';
@@ -45,7 +46,7 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
-// Cancel order (user can cancel only if pending or processing); reason required
+// Cancel order (pending, processing, or shipped — not delivered); Razorpay refunds per policy
 router.patch('/:orderId/cancel', protect, async (req, res) => {
   try {
     const reason = typeof req.body.reason === 'string' ? req.body.reason.trim() : '';
@@ -63,17 +64,51 @@ router.patch('/:orderId/cancel', protect, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
     const s = (order.status || '').toLowerCase();
-    if (s !== 'pending' && s !== 'processing') {
+    if (s === 'cancelled') {
       return res.status(400).json({
         success: false,
-        message: 'Only pending or processing orders can be cancelled',
+        message: 'Order is already cancelled',
       });
     }
+    if (s === 'delivered') {
+      return res.status(400).json({
+        success: false,
+        message: 'Delivered orders cannot be cancelled here. Use returns or contact support.',
+      });
+    }
+    if (s !== 'pending' && s !== 'processing' && s !== 'shipped') {
+      return res.status(400).json({
+        success: false,
+        message: 'This order cannot be cancelled',
+      });
+    }
+
+    const previousStatus = order.status;
+    const refundResult = await applyCancellationRefunds(order, previousStatus);
+    if (!refundResult.ok) {
+      return res.status(502).json({
+        success: false,
+        message: refundResult.error || 'Refund failed. Order was not cancelled. Please try again or contact support.',
+      });
+    }
+
     order.status = 'cancelled';
     order.cancelReason = reason;
     order.cancelledAt = new Date();
     await order.save();
-    res.status(200).json({ success: true, data: { order }, message: 'Order cancelled' });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        order,
+        refund: {
+          skipped: refundResult.skipped || null,
+          amountRupees: order.cancellationRefund?.amountRupees ?? null,
+          razorpayRefundId: order.cancellationRefund?.razorpayRefundId || null,
+        },
+      },
+      message: 'Order cancelled',
+    });
   } catch (error) {
     console.error('Cancel order error:', error);
     res.status(500).json({

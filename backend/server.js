@@ -19,6 +19,7 @@ import searchRoutes from './routes/searchRoutes.js';
 import shippingReturnRoutes from './routes/shippingReturnRoutes.js';
 import returnRoutes from './routes/returnRoutes.js';
 import publicSettingsRoutes from './routes/publicSettingsRoutes.js';
+import parcelGuruWebhookRoutes from './routes/parcelGuruWebhookRoutes.js';
 
 dotenv.config();
 
@@ -88,6 +89,9 @@ console.log('✅ Return routes registered at /api/returns');
 
 app.use('/api/settings', publicSettingsRoutes);
 console.log('✅ Public settings routes registered at /api/settings');
+
+app.use('/api/v1/channel', parcelGuruWebhookRoutes);
+console.log('✅ ParcelGuru webhook registered at POST /api/v1/channel/event/hook');
 
 // Register scratch card routes
 app.use('/api/scratch-card', scratchCardRoutes);

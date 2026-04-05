@@ -6,11 +6,11 @@ import Cart from '../models/Cart.js';
 import Setting from '../models/Setting.js';
 import { protect } from '../middleware/authMiddleware.js';
 import dotenv from 'dotenv';
+import { COD_ADVANCE_PAISE } from '../config/paymentConstants.js';
 
 dotenv.config();
 
 const router = express.Router();
-const COD_ADVANCE_PAISE = 20000; // ₹200 — must match policy / frontend
 const SHIPPING_CONFIG_KEY = 'shippingConfig';
 const DEFAULT_SHIPPING_CONFIG = {
   freeShippingThreshold: 2000,
@@ -35,6 +35,17 @@ router.get('/test', (req, res) => {
   res.json({
     success: true,
     message: 'Payment routes are working',
+  });
+});
+
+/** Public — COD advance matches `create-order` + Razorpay (restart server after changing COD_ADVANCE_PAISE). */
+router.get('/cod-advance', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      paise: COD_ADVANCE_PAISE,
+      rupees: COD_ADVANCE_PAISE / 100,
+    },
   });
 });
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { orderAPI, getShippingConfig } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -18,14 +18,31 @@ import {
 const OrderDetail = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [checkoutSuccessMsg, setCheckoutSuccessMsg] = useState('');
   const [shippingConfig, setShippingConfig] = useState({
     freeShippingThreshold: 2000,
     shippingCharge: 50,
   });
+
+  useEffect(() => {
+    const p = searchParams.get('payment');
+    if (p === 'success') {
+      setCheckoutSuccessMsg('Payment successful! Your order is confirmed.');
+    } else if (p === 'cod') {
+      setCheckoutSuccessMsg('Order placed successfully.');
+    }
+    if (p) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('payment');
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot: read checkout redirect query once
+  }, []);
 
   useEffect(() => {
     const fetchShippingConfig = async () => {
@@ -185,6 +202,14 @@ const OrderDetail = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {checkoutSuccessMsg ? (
+          <div
+            role="status"
+            className="mb-4 rounded-lg bg-green-50 border border-green-200 text-green-800 px-4 py-3 text-sm font-medium"
+          >
+            {checkoutSuccessMsg}
+          </div>
+        ) : null}
         {/* Order Header */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

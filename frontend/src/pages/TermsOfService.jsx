@@ -28,7 +28,7 @@ const TermsOfService = () => {
     },
     {
       title: '7. Cash on Delivery (COD) Advance Payment',
-      content: 'For Cash on Delivery orders, customers pay a small advance (₹1) online before the order is processed; the rest is due on delivery. If you cancel before the order ships, the advance is refunded automatically. After shipment, the advance is not refunded on cancellation. See the Refund and Return Policy for full details.'
+      content: 'For Cash on Delivery orders, customers pay a small advance (₹200) online before the order is processed; the rest is due on delivery. If you cancel before the order ships, the advance is refunded automatically. After shipment, the advance is not refunded on cancellation. See the Refund and Return Policy for full details.'
     },
     {
       title: '8. Lawful Use',

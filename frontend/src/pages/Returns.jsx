@@ -58,7 +58,7 @@ const Returns = () => {
                 <div className="mt-4">
                   <h4 className="font-semibold text-gray-900 mb-1">Non-Refundable Charges</h4>
                   <p className="text-gray-600 leading-relaxed">
-                    <strong>COD Advance Payment:</strong> For Cash on Delivery orders, a small advance (<span className="font-semibold">₹1</span>) is paid online before processing. If you cancel <span className="font-semibold">before</span> the order is shipped, this advance is refunded automatically. After the order is shipped (or delivered), the advance is <span className="font-semibold">not</span> refunded on cancellation.
+                    <strong>COD Advance Payment:</strong> For Cash on Delivery orders, a small advance (<span className="font-semibold">₹200</span>) is paid online before processing. If you cancel <span className="font-semibold">before</span> the order is shipped, this advance is refunded automatically. After the order is shipped (or delivered), the advance is <span className="font-semibold">not</span> refunded on cancellation.
                   </p>
                   <p className="text-gray-600 leading-relaxed mt-2">
                     <strong>Online Payment Cancellation:</strong> If you paid in full online: cancel <span className="font-semibold">before</span> shipment and the full payment is refunded. If the order was <span className="font-semibold">already shipped</span>, a cancellation charge of <span className="font-semibold">₹200</span> is deducted and the rest is refunded.

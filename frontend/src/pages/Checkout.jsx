@@ -355,8 +355,11 @@ const Checkout = () => {
 
               // Clear cart and redirect after delay
               setTimeout(() => {
+                setIsPlacingOrder(true);
                 clearCart();
-                navigate('/profile?tab=orders&payment=cod');
+                const oid = orderResponse.data.order?._id;
+                if (oid) navigate(`/orders/${String(oid)}?payment=cod`);
+                else navigate('/profile?tab=orders&payment=cod');
               }, 2000);
             } else {
               throw new Error(orderResponse.message || 'Failed to create COD order');
@@ -447,31 +450,23 @@ const Checkout = () => {
           );
 
           if (verifyResponse.success) {
-            // Create order with full payment
-            const orderResponse = await orderAPI.createOrder(
-              shippingAddress,
-              'razorpay',
-              appliedCoupon?.code || '',
-              {
-                paymentId: response.razorpay_payment_id,
-                razorpayOrderId: response.razorpay_order_id,
-                razorpaySignature: response.razorpay_signature
-              }
-            );
-
-            if (orderResponse.success) {
-              setOrderData(orderResponse.data.order);
-              setShowSuccessModal(true);
-              setIsProcessingOrder(false);
-              setLoading(false);
-
-              setTimeout(() => {
-                clearCart();
-                navigate('/profile?tab=orders&payment=success');
-              }, 2000);
-            } else {
-              throw new Error(orderResponse.message || 'Failed to create order');
+            // Order is created on payment/create-order and finalized in verify-payment (cart cleared server-side).
+            const paidOrder = verifyResponse.data?.order;
+            if (!paidOrder?._id) {
+              throw new Error('Order confirmation missing. Check My orders in your profile.');
             }
+
+            setOrderData(paidOrder);
+            setShowSuccessModal(true);
+            setIsProcessingOrder(false);
+            setLoading(false);
+
+            const orderId = String(paidOrder._id);
+            setTimeout(() => {
+              setIsPlacingOrder(true);
+              clearCart();
+              navigate(`/orders/${orderId}?payment=success`);
+            }, 2000);
           } else {
             throw new Error('Payment verification failed');
           }

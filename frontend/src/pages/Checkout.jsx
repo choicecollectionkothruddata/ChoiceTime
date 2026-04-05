@@ -273,16 +273,11 @@ const Checkout = () => {
       throw new Error('Payment gateway is not available. Please refresh the page and try again.');
     }
 
-    // Create Razorpay order for ₹200 advance
+    // Backend creates Razorpay order for fixed COD advance (₹200)
     const advanceAmount = 200;
     const response = await paymentAPI.createRazorpayOrder({
-      amount: advanceAmount * 100, // Convert to paise
-      currency: 'INR',
-      receipt: `cod-advance-${Date.now()}`,
-      notes: {
-        type: 'cod_advance',
-        user_id: user._id,
-      }
+      purpose: 'cod_advance',
+      shippingAddress,
     });
 
     if (!response.success) {
@@ -290,6 +285,14 @@ const Checkout = () => {
     }
 
     const { orderId, amount, currency, key } = response.data;
+
+    // With order_id, Razorpay uses the server-created order amount — wrong API = full cart total
+    if (Number(amount) !== advanceAmount * 100) {
+      throw new Error(
+        `COD advance must be ₹${advanceAmount}, but the API returned ₹${Number(amount) / 100}. ` +
+          'Your frontend may be calling an old server: use the latest backend, or in dev set VITE_API_BASE_URL=http://localhost:5000 in frontend/.env.development and run the API locally, then restart Vite.'
+      );
+    }
 
     // Razorpay options for COD advance payment
     const options = {
@@ -385,6 +388,8 @@ const Checkout = () => {
       setProcessingStep(0);
     });
     razorpay.open();
+    // handlePayment leaves loading true; Razorpay modal is open — stop spinner so UI is not stuck
+    setLoading(false);
   };
 
   const handleOnlinePayment = async () => {
@@ -492,6 +497,7 @@ const Checkout = () => {
       setProcessingStep(0);
     });
     razorpay.open();
+    setLoading(false);
   };
 
   // Don't return null if we're placing an order (to show the modal)
@@ -1136,7 +1142,7 @@ const Checkout = () => {
               <div className="px-4 sm:px-6 py-4 border-t border-gray-200 bg-white">
                 <button
                   onClick={handlePayment}
-                  disabled={loading || isProcessingOrder}
+                  disabled={loading || isProcessingOrder || isPlacingOrder}
                   className="w-full bg-gray-900 text-white py-2.5 rounded-md hover:bg-gray-800 transition-colors text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading || isProcessingOrder ? (

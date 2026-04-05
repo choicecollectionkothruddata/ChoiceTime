@@ -10,6 +10,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const router = express.Router();
+const COD_ADVANCE_PAISE = 20000; // ₹200 — must match policy / frontend
 const SHIPPING_CONFIG_KEY = 'shippingConfig';
 const DEFAULT_SHIPPING_CONFIG = {
   freeShippingThreshold: 2000,
@@ -59,7 +60,7 @@ router.post('/create-order', protect, async (req, res) => {
       });
     }
 
-    const { shippingAddress } = req.body;
+    const { shippingAddress, purpose } = req.body;
 
     const cart = await Cart.findOne({ user: req.user._id });
 
@@ -67,6 +68,29 @@ router.post('/create-order', protect, async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Cart is empty',
+      });
+    }
+
+    // COD: charge only advance online; order is created after payment via /orders/create
+    if (purpose === 'cod_advance') {
+      const razorpayOrder = await razorpay.orders.create({
+        amount: COD_ADVANCE_PAISE,
+        currency: 'INR',
+        receipt: `cod_adv_${Date.now()}`,
+        notes: {
+          type: 'cod_advance',
+          userId: req.user._id.toString(),
+        },
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          orderId: razorpayOrder.id,
+          amount: razorpayOrder.amount,
+          currency: 'INR',
+          key: process.env.RAZORPAY_KEY_ID,
+        },
       });
     }
 
@@ -152,16 +176,39 @@ router.post('/verify-payment', protect, async (req, res) => {
       });
     }
 
-    // Find order by Razorpay order ID
-    const order = await Order.findOne({
+    // Find order by Razorpay order ID (full online prepay flow)
+    let order = await Order.findOne({
       razorpayOrderId: razorpay_order_id,
       user: req.user._id,
     });
 
+    // COD advance: no DB order until /orders/create — verify signature + Razorpay order
     if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found',
+      let rzOrder;
+      try {
+        rzOrder = await razorpay.orders.fetch(razorpay_order_id);
+      } catch (e) {
+        return res.status(400).json({
+          success: false,
+          message: 'Could not verify payment order',
+        });
+      }
+      const notes = rzOrder.notes || {};
+      const uid = notes.userId != null ? String(notes.userId) : '';
+      if (
+        Number(rzOrder.amount) !== COD_ADVANCE_PAISE ||
+        String(notes.type || '') !== 'cod_advance' ||
+        uid !== req.user._id.toString()
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid advance payment',
+        });
+      }
+      return res.status(200).json({
+        success: true,
+        message: 'Advance payment verified',
+        data: { codAdvance: true },
       });
     }
 

@@ -123,6 +123,11 @@ router.post('/create', protect, async (req, res) => {
     
     const { shippingAddress, paymentMethod = 'COD', couponCode, advancePayment } = req.body;
 
+    const advanceDoc =
+      advancePayment && typeof advancePayment === 'object'
+        ? { ...advancePayment, status: advancePayment.status || 'paid' }
+        : undefined;
+
     const cart = await Cart.findOne({ user: req.user._id });
     console.log('Cart found:', cart ? `Items: ${cart.items.length}` : 'No cart found');
 
@@ -204,7 +209,7 @@ router.post('/create', protect, async (req, res) => {
       coupon: appliedCouponCode ? { code: appliedCouponCode, discount: couponDiscount } : { code: '', discount: 0 },
       shippingAddress: shippingAddress || req.user.address || {},
       paymentMethod,
-      advancePayment: advancePayment || null,
+      advancePayment: advanceDoc,
     });
 
     console.log('Order created successfully:', order._id);

@@ -219,10 +219,10 @@ export const orderAPI = {
     });
   },
 
-  createOrder: async (shippingAddress, paymentMethod = 'COD', couponCode = '') => {
+  createOrder: async (shippingAddress, paymentMethod = 'COD', couponCode = '', extras = {}) => {
     return apiRequest('/orders/create', {
       method: 'POST',
-      body: JSON.stringify({ shippingAddress, paymentMethod, couponCode }),
+      body: JSON.stringify({ shippingAddress, paymentMethod, couponCode, ...extras }),
     });
   },
 
@@ -240,10 +240,15 @@ export const orderAPI = {
 
 // Payment API calls
 export const paymentAPI = {
-  createRazorpayOrder: async (shippingAddress) => {
+  /** Full prepay: pass shippingAddress object. COD advance: { purpose: 'cod_advance', shippingAddress }. */
+  createRazorpayOrder: async (payload) => {
+    const body =
+      payload && typeof payload === 'object' && payload.purpose === 'cod_advance'
+        ? { purpose: 'cod_advance', shippingAddress: payload.shippingAddress }
+        : { shippingAddress: payload };
     return apiRequest('/payment/create-order', {
       method: 'POST',
-      body: JSON.stringify({ shippingAddress }),
+      body: JSON.stringify(body),
     });
   },
 

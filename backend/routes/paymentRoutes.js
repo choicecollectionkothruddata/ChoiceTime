@@ -235,10 +235,14 @@ router.post('/verify-payment', protect, async (req, res) => {
       const parcelGuruPayload = buildParcelGuruOrderPayload(order, {
         customerEmail: req.user?.email || '',
       });
+
+      console.log("🚀 ParcelGuru Payload:", JSON.stringify(parcelGuruPayload, null, 2));
+
       const pgResult = await pushOrder(parcelGuruPayload);
-      console.log('ParcelGuru push result:', pgResult);
+
+      console.log("✅ ParcelGuru push result:", JSON.stringify(pgResult, null, 2));
     } catch (pgError) {
-      console.error('ParcelGuru push failed:', pgError);
+      console.error("❌ ParcelGuru push failed:", pgError?.message || pgError);
     }
 
     // Clear cart

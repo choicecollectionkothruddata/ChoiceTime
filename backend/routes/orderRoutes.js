@@ -5,6 +5,7 @@ import Coupon from '../models/Coupon.js';
 import Setting from '../models/Setting.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { applyCancellationRefunds } from '../services/orderCancellationRefunds.js';
+import { pushCodOrderToParcelGuru } from '../controllers/orderController.js';
 
 const router = express.Router();
 const SHIPPING_CONFIG_KEY = 'shippingConfig';
@@ -248,6 +249,10 @@ router.post('/create', protect, async (req, res) => {
     });
 
     console.log('Order created successfully:', order._id);
+
+    if (String(paymentMethod || 'COD').toUpperCase() === 'COD') {
+      await pushCodOrderToParcelGuru(order, req.user?.email);
+    }
 
     // Clear cart
     cart.items = [];

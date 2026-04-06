@@ -1,7 +1,7 @@
 // Cloudinary Configuration
 export const CLOUDINARY_CONFIG = {
-  cloudName: 'daxdjob49',
-  uploadPreset: 'rmbgfv9i',
+  cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
+  uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET,
 };
 
 /** Reject originals over this before client-side work (admin product images). */

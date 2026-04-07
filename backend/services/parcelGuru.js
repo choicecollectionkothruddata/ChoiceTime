@@ -23,9 +23,10 @@ export function mapParcelGuruStatusToOrderStatus(pgStatus) {
   switch (s) {
     case 'delivered':
       return 'delivered';
+    case 'out_for_delivery':
+      return 'out_for_delivery';
     case 'picked_up':
     case 'in_transit':
-    case 'out_for_delivery':
     case 'ready_to_ship':
       return 'shipped';
     case 'pending_pickup':
@@ -41,7 +42,7 @@ export function mapParcelGuruStatusToOrderStatus(pgStatus) {
   }
 }
 
-const ORDER_FLOW_RANK = { pending: 1, processing: 2, shipped: 3, delivered: 4 };
+const ORDER_FLOW_RANK = { pending: 1, processing: 2, shipped: 3, out_for_delivery: 4, delivered: 5 };
 
 export function shouldAdvanceOrderStatus(current, proposed) {
   if (!proposed) return false;
@@ -187,6 +188,8 @@ export async function applyParcelGuruWebhookPayload(body) {
   }
 
   const pgStatus = event.status;
+  console.log("📦 Webhook received:", pgStatus, "for order:", order_id);
+  
   const order = await findOrderByParcelGuruOrderId(order_id);
   if (!order) {
     return { ok: false, code: 404, message: 'Order not found for order_id' };
@@ -206,8 +209,14 @@ export async function applyParcelGuruWebhookPayload(body) {
   const led = event.datetime ? new Date(event.datetime) : new Date();
   order.parcelGuru.lastEventAt = Number.isNaN(led.getTime()) ? new Date() : led;
 
+  // Update trackingId if available
+  if (awb_number) {
+    order.trackingId = String(awb_number);
+  }
+
   if (internalStatus && shouldAdvanceOrderStatus(order.status, internalStatus)) {
     order.status = internalStatus;
+    console.log("✅ Order updated:", order._id, "status:", internalStatus);
     if (internalStatus === 'delivered' && !order.deliveredDate) {
       order.deliveredDate = new Date();
     }

@@ -92,8 +92,21 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
-    default: 'pending',
+    enum: ['pending', 'processing', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'],
+    default: 'processing',
+  },
+  trackingId: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  lastWebhookEventId: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  lastWebhookAt: {
+    type: Date,
   },
   coupon: {
     code: { type: String, default: '' },

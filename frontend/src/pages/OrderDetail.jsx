@@ -120,6 +120,8 @@ const OrderDetail = () => {
     switch (status?.toLowerCase()) {
       case 'delivered':
         return 'bg-green-100 text-green-800 border-green-200';
+      case 'out_for_delivery':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'shipped':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'cancelled':
@@ -135,8 +137,10 @@ const OrderDetail = () => {
     switch (status?.toLowerCase()) {
       case 'delivered':
         return <CheckCircle className="w-4 h-4" />;
-      case 'shipped':
+      case 'out_for_delivery':
         return <Truck className="w-4 h-4" />;
+      case 'shipped':
+        return <Package className="w-4 h-4" />;
       case 'processing':
         return <Clock className="w-4 h-4" />;
       default:
@@ -294,11 +298,12 @@ const OrderDetail = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Timeline</h3>
               <div className="space-y-4">
+                {/* Order Placed - Always shown */}
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                     <CheckCircle className="w-4 h-4 text-green-600" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="font-medium text-gray-900">Order Placed</p>
                     <p className="text-sm text-gray-600">
                       {formatDate(order.orderDate || order.createdAt)} at {formatTime(order.orderDate || order.createdAt)}
@@ -306,36 +311,73 @@ const OrderDetail = () => {
                   </div>
                 </div>
                 
-                {(order.status === 'processing' || order.status === 'shipped' || order.status === 'delivered') && (
+                {/* Processing */}
+                {(order.status === 'processing' || order.status === 'shipped' || order.status === 'out_for_delivery' || order.status === 'delivered') && (
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Clock className="w-4 h-4 text-blue-600" />
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      order.status === 'processing' ? 'bg-blue-100' : 'bg-green-100'
+                    }`}>
+                      <Clock className={`w-4 h-4 ${order.status === 'processing' ? 'text-blue-600' : 'text-green-600'}`} />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <p className="font-medium text-gray-900">Processing</p>
                       <p className="text-sm text-gray-600">Your order is being prepared</p>
                     </div>
+                    {order.status !== 'processing' && (
+                      <div className="text-green-600">
+                        <CheckCircle className="w-5 h-5" />
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {(order.status === 'shipped' || order.status === 'delivered') && (
+                {/* Shipped */}
+                {(order.status === 'shipped' || order.status === 'out_for_delivery' || order.status === 'delivered') && (
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Truck className="w-4 h-4 text-purple-600" />
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      order.status === 'shipped' ? 'bg-blue-100' : 'bg-green-100'
+                    }`}>
+                      <Package className={`w-4 h-4 ${order.status === 'shipped' ? 'text-blue-600' : 'text-green-600'}`} />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <p className="font-medium text-gray-900">Shipped</p>
-                      <p className="text-sm text-gray-600">Your order is on the way</p>
+                      <p className="text-sm text-gray-600">Your order has been shipped</p>
                     </div>
+                    {order.status !== 'shipped' && (
+                      <div className="text-green-600">
+                        <CheckCircle className="w-5 h-5" />
+                      </div>
+                    )}
                   </div>
                 )}
 
+                {/* Out for Delivery */}
+                {(order.status === 'out_for_delivery' || order.status === 'delivered') && (
+                  <div className="flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      order.status === 'out_for_delivery' ? 'bg-orange-100' : 'bg-green-100'
+                    }`}>
+                      <Truck className={`w-4 h-4 ${order.status === 'out_for_delivery' ? 'text-orange-600' : 'text-green-600'}`} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">Out for Delivery</p>
+                      <p className="text-sm text-gray-600">Your order is out for delivery</p>
+                    </div>
+                    {order.status !== 'out_for_delivery' && (
+                      <div className="text-green-600">
+                        <CheckCircle className="w-5 h-5" />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Delivered */}
                 {order.status === 'delivered' && (
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <CheckCircle className="w-4 h-4 text-green-600" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <p className="font-medium text-gray-900">Delivered</p>
                       <p className="text-sm text-gray-600">
                         {order.deliveredDate ? 
@@ -464,16 +506,24 @@ const OrderDetail = () => {
               </div>
             </div>
 
-            {(order.parcelGuru?.awbNumber || order.parcelGuru?.shipmentStatus) && (
+            {(order.parcelGuru?.awbNumber || order.parcelGuru?.shipmentStatus || order.trackingId) && (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <Truck className="w-5 h-5 text-gray-600" />
                   Shipment tracking
                 </h3>
                 <div className="space-y-2 text-sm">
+                  {order.trackingId && (
+                    <div className="flex justify-between gap-2">
+                      <span className="text-gray-600">Tracking ID</span>
+                      <span className="font-mono font-medium text-gray-900 text-right break-all">
+                        {order.trackingId}
+                      </span>
+                    </div>
+                  )}
                   {order.parcelGuru?.awbNumber && (
                     <div className="flex justify-between gap-2">
-                      <span className="text-gray-600">AWB / Tracking</span>
+                      <span className="text-gray-600">AWB Number</span>
                       <span className="font-mono font-medium text-gray-900 text-right break-all">
                         {order.parcelGuru.awbNumber}
                       </span>
@@ -481,7 +531,7 @@ const OrderDetail = () => {
                   )}
                   {order.parcelGuru?.shipmentStatus && (
                     <div className="flex justify-between gap-2">
-                      <span className="text-gray-600">Status</span>
+                      <span className="text-gray-600">Shipment Status</span>
                       <span className="font-medium text-gray-900 text-right capitalize">
                         {String(order.parcelGuru.shipmentStatus).replace(/_/g, ' ')}
                       </span>

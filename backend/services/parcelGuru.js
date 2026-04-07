@@ -227,6 +227,106 @@ export async function applyParcelGuruWebhookPayload(body) {
 }
 
 /**
+ * Create reverse pickup for returns using ParcelGuru Channel API.
+ * Reuses existing pushOrder infrastructure with return-specific payload.
+ */
+export async function createReversePickup(order) {
+  const base = getParcelGuruBaseUrl();
+  const key = (process.env.PARCELGURU_API_KEY || '').trim();
+  if (!base || !key) {
+    console.warn('ParcelGuru reverse pickup skipped: PARCELGURU_BASE_URL or PARCELGURU_API_KEY missing');
+    return { status: 'skipped', message: 'ParcelGuru env not configured' };
+  }
+
+  // Prevent duplicate reverse pickup creation
+  if (order.parcelGuru?.reversePickupReference) {
+    console.log('Reverse pickup already exists for order:', order._id);
+    return { status: 'exists', message: 'Reverse pickup already created' };
+  }
+
+  // Build reverse pickup payload
+  const addr = order.shippingAddress || {};
+  const { first: shipFirst, last: shipLast } = splitPersonName(addr.name);
+  const reverseOrderId = `RET_${String(order._id)}`;
+
+  const line_items = (order.items || []).map((item, idx) => {
+    const p = item.product && typeof item.product === 'object' ? item.product : {};
+    const title = p.name || p.title || 'Product';
+    const sku = p.sku || p.model || `SKU${idx + 1}`;
+    const pid = p._id != null ? String(p._id) : String(idx + 1);
+    return {
+      id: pid,
+      sku: String(sku).slice(0, 64),
+      title: String(title).slice(0, 500),
+      quantity: item.quantity,
+      price: String(item.price ?? p.price ?? 0),
+      weight: '500',
+    };
+  });
+
+  const { first: custFirst, last: custLast } = splitPersonName(addr.name);
+
+  const reversePayload = {
+    order_id: reverseOrderId,
+    order_date: new Date().toISOString(),
+    order_status: 'paid',
+    package_type: 'reverse_pickup',
+    payment_mode: 'COD',
+    collectable_amount: '0',
+    package_declared_value: String(order.totalAmount ?? 0),
+    package_weight: '0.5',
+    package_length: '15',
+    package_breadth: '10',
+    package_height: '10',
+    line_items,
+    shipping_address: {
+      first_name: shipFirst,
+      last_name: shipLast,
+      address1: String(addr.address || ''),
+      city: String(addr.city || ''),
+      state: String(addr.state || ''),
+      country: String(addr.country || 'India'),
+      pincode: String(addr.zipCode || ''),
+    },
+    customer: {
+      first_name: custFirst,
+      last_name: custLast,
+      phone: String(addr.phone || ''),
+      email: '',
+    },
+    notes: `Reverse pickup for return order: ${order._id}`,
+  };
+
+  const url = `${base}/api/v1/channel/orders/create`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-parcelguru-key': key,
+      'x-parcelguru-api-version': 'v1',
+      'x-parcelguru-topic': 'myparcelguru.v1.reverse_pickup_created',
+    },
+    body: JSON.stringify(reversePayload),
+  });
+
+  const text = await res.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = { raw: text };
+  }
+
+  if (!res.ok) {
+    console.error('ParcelGuru reverse pickup HTTP error:', res.status, data);
+    return { status: 'error', message: 'Reverse pickup creation failed', data };
+  }
+
+  console.log('ParcelGuru reverse pickup created:', reverseOrderId, data);
+  return { status: 'success', message: 'Reverse pickup created', data, reverseOrderId };
+}
+
+/**
  * Future: authenticated requests to ParcelGuru REST API (booking, rates, etc.)
  */
 export async function parcelGuruRequest(path, options = {}) {

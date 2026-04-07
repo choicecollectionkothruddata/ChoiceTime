@@ -12,7 +12,9 @@ import {
   CheckCircle,
   Truck,
   Clock,
-  FileText
+  FileText,
+  RotateCcw,
+  AlertCircle
 } from 'lucide-react';
 
 const OrderDetail = () => {
@@ -24,6 +26,9 @@ const OrderDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [checkoutSuccessMsg, setCheckoutSuccessMsg] = useState('');
+  const [showReturnForm, setShowReturnForm] = useState(false);
+  const [returnReason, setReturnReason] = useState('');
+  const [returnLoading, setReturnLoading] = useState(false);
   const [shippingConfig, setShippingConfig] = useState({
     freeShippingThreshold: 2000,
     shippingCharge: 50,
@@ -156,6 +161,90 @@ const OrderDetail = () => {
     const discountedSubtotal = Math.max(0, subtotal - couponDiscount);
     
     return discountedSubtotal > shippingConfig.freeShippingThreshold ? 0 : shippingConfig.shippingCharge;
+  };
+
+  const handleReturnRequest = async () => {
+    if (!returnReason.trim()) {
+      setError('Please provide a reason for return');
+      return;
+    }
+
+    setReturnLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/returns/request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: order._id,
+          reason: returnReason.trim()
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setShowReturnForm(false);
+        setReturnReason('');
+        // Refresh order data to show updated return status
+        const orderResponse = await orderAPI.getOrder(orderId);
+        if (orderResponse.success) {
+          setOrder(orderResponse.data.order);
+        }
+      } else {
+        setError(data.message || 'Failed to submit return request');
+      }
+    } catch (err) {
+      setError('Failed to submit return request');
+    } finally {
+      setReturnLoading(false);
+    }
+  };
+
+  const getReturnStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'return_requested':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'return_approved':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'return_rejected':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'picked_up':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'returned':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'refunded':
+        return 'bg-green-100 text-green-800 border-green-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getReturnStatusText = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'return_requested':
+        return 'Return Requested';
+      case 'return_approved':
+        return 'Return Approved';
+      case 'return_rejected':
+        return 'Return Rejected';
+      case 'picked_up':
+        return 'Pickup Scheduled';
+      case 'returned':
+        return 'Return Completed';
+      case 'refunded':
+        return 'Refunded';
+      default:
+        return 'No Return';
+    }
+  };
+
+  const canRequestReturn = () => {
+    return order.status === 'delivered' && 
+           (!order.returnStatus || order.returnStatus === 'none');
   };
 
   if (loading) {
@@ -505,6 +594,112 @@ const OrderDetail = () => {
                 </div>
               </div>
             </div>
+
+            {/* Return Status */}
+            {order.returnStatus && order.returnStatus !== 'none' && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <RotateCcw className="w-5 h-5 text-gray-600" />
+                  Return Status
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Current Status</span>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getReturnStatusColor(order.returnStatus)}`}>
+                      {getReturnStatusText(order.returnStatus)}
+                    </span>
+                  </div>
+                  
+                  {order.returnReason && (
+                    <div>
+                      <span className="text-sm text-gray-600">Return Reason</span>
+                      <p className="text-sm text-gray-900 mt-1">{order.returnReason}</p>
+                    </div>
+                  )}
+                  
+                  {order.returnRequestedAt && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Requested On</span>
+                      <span className="text-gray-900">{formatDate(order.returnRequestedAt)}</span>
+                    </div>
+                  )}
+                  
+                  {order.returnApprovedAt && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Approved On</span>
+                      <span className="text-gray-900">{formatDate(order.returnApprovedAt)}</span>
+                    </div>
+                  )}
+                  
+                  {order.returnCompletedAt && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Completed On</span>
+                      <span className="text-gray-900">{formatDate(order.returnCompletedAt)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Return Request Button */}
+            {canRequestReturn() && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <RotateCcw className="w-5 h-5 text-gray-600" />
+                  Return Order
+                </h3>
+                
+                {!showReturnForm ? (
+                  <div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Not satisfied with your order? You can request a return within 30 days of delivery.
+                    </p>
+                    <button
+                      onClick={() => setShowReturnForm(true)}
+                      className="w-full bg-gray-900 text-white py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Request Return
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Return Reason *
+                      </label>
+                      <textarea
+                        value={returnReason}
+                        onChange={(e) => setReturnReason(e.target.value)}
+                        rows={4}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                        placeholder="Please describe why you want to return this order..."
+                      />
+                    </div>
+                    
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleReturnRequest}
+                        disabled={returnLoading}
+                        className="flex-1 bg-gray-900 text-white py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {returnLoading ? 'Submitting...' : 'Submit Request'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowReturnForm(false);
+                          setReturnReason('');
+                          setError('');
+                        }}
+                        className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {(order.parcelGuru?.awbNumber || order.parcelGuru?.shipmentStatus || order.trackingId) && (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

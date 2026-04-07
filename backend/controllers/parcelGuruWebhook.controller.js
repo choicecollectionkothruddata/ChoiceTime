@@ -41,15 +41,25 @@ export const handleParcelGuruWebhook = async (req, res) => {
     console.log('📦 Webhook received:', eventType);
     console.log('📦 Payload:', JSON.stringify(req.body));
 
-    // 3. ORDER LOOKUP - Handle multiple ID formats
+    // 3. ORDER LOOKUP - Handle multiple ID formats including reverse pickups
     const ref = String(req.body.order_id || req.body.orderId || '').replace('#', '');
     if (!ref) {
-      console.error('🚨 Missing order_id in webhook payload');
+      console.error('Check if this is a reverse pickup order');
       return res.status(400).json({ error: 'Missing order_id' });
     }
 
     let order;
-    if (mongoose.Types.ObjectId.isValid(ref)) {
+    
+    // Check if this is a reverse pickup order (starts with RET_)
+    if (ref.startsWith('RET_')) {
+      const originalOrderId = ref.replace('RET_', '');
+      if (mongoose.Types.ObjectId.isValid(originalOrderId)) {
+        order = await Order.findById(originalOrderId);
+      }
+    }
+    
+    // Regular order lookup
+    if (!order && mongoose.Types.ObjectId.isValid(ref)) {
       order = await Order.findById(ref);
     }
     
@@ -58,7 +68,11 @@ export const handleParcelGuruWebhook = async (req, res) => {
     }
 
     if (!order) {
-      console.error('🚨 Order not found for order_id:', ref);
+      order = await Order.findOne({ 'parcelGuru.reversePickupReference': ref });
+    }
+
+    if (!order) {
+      console.error('Order not found for order_id:', ref);
       return res.status(404).json({ error: 'Order not found' });
     }
 
@@ -74,7 +88,11 @@ export const handleParcelGuruWebhook = async (req, res) => {
       shipped: 'shipped',
       out_for_delivery: 'out_for_delivery',
       delivered: 'delivered',
-      cancelled: 'cancelled'
+      cancelled: 'cancelled',
+      // Return pickup events
+      pickup_scheduled: 'pickup_scheduled',
+      picked_up: 'picked_up',
+      returned: 'returned'
     };
 
     const fallbackBodyEventStatus = String(req.body.event?.status || '')
@@ -84,7 +102,26 @@ export const handleParcelGuruWebhook = async (req, res) => {
     console.log('📦 ParcelGuru Event:', eventType, '=> Status:', mappedStatus);
     const newStatus = mappedStatus || order.status;
 
-    // 6. PREVENT STATUS DOWNGRADE - Only advance if progressing, but cancelled always overrides
+    // 6. HANDLE RETURN STATUS UPDATES - Check if this is a return pickup event
+    const returnStatusMap = {
+      pickup_scheduled: 'pickup_scheduled',
+      picked_up: 'picked_up',
+      returned: 'returned'
+    };
+
+    const isReturnEvent = returnStatusMap[eventType] || returnStatusMap[fallbackBodyEventStatus];
+    let returnStatusChanged = false;
+
+    if (isReturnEvent && order.returnStatus !== 'refunded') {
+      const newReturnStatus = returnStatusMap[eventType] || returnStatusMap[fallbackBodyEventStatus];
+      if (newReturnStatus && newReturnStatus !== order.returnStatus) {
+        order.returnStatus = newReturnStatus;
+        returnStatusChanged = true;
+        console.log('Return status updated:', order._id, 'returnStatus:', newReturnStatus);
+      }
+    }
+
+    // 7. PREVENT STATUS DOWNGRADE - Only advance if progressing, but cancelled always overrides
     const ORDER_FLOW_RANK = {
       pending: 1,
       processing: 2,

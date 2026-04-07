@@ -108,6 +108,25 @@ const orderSchema = new mongoose.Schema({
   lastWebhookAt: {
     type: Date,
   },
+  returnStatus: {
+    type: String,
+    enum: ['none', 'return_requested', 'return_approved', 'return_rejected', 'pickup_scheduled', 'picked_up', 'returned', 'refunded'],
+    default: 'none',
+  },
+  returnReason: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  returnRequestedAt: {
+    type: Date,
+  },
+  returnApprovedAt: {
+    type: Date,
+  },
+  returnCompletedAt: {
+    type: Date,
+  },
   coupon: {
     code: { type: String, default: '' },
     discount: { type: Number, default: 0 },
@@ -139,8 +158,51 @@ const orderSchema = new mongoose.Schema({
       type: Date,
     },
   },
+  returnRefund: {
+    razorpayRefundId: {
+      type: String,
+      default: '',
+    },
+    amountRupees: {
+      type: Number,
+    },
+    at: {
+      type: Date,
+    },
+  },
+  refundStatus: {
+    type: String,
+    enum: ['none', 'processed', 'failed'],
+    default: 'none',
+  },
+  refundLogs: [{
+    refundId: {
+      type: String,
+      default: '',
+    },
+    amount: {
+      type: Number,
+    },
+    status: {
+      type: String,
+      enum: ['success', 'failed'],
+    },
+    error: {
+      type: String,
+      default: '',
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+  }],
   parcelGuru: {
     orderReference: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    reversePickupReference: {
       type: String,
       default: '',
       trim: true,

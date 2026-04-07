@@ -20,13 +20,20 @@ export const handleParcelGuruWebhook = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized webhook' });
     }
 
-    // 2. EVENT EXTRACTION - Extract event type safely
-    const eventType = 
-      req.headers['x-parcelguru-topic'] || 
-      req.body.event?.type ||
-      req.body.event?.status ||
+    // 2. EVENT EXTRACTION - Extract event type safely and normalize
+    const bodyEventValue =
+      typeof req.body.event === 'string'
+        ? req.body.event
+        : (req.body.event?.type || req.body.event?.status);
+
+    const eventType = String(
+      req.headers['x-parcelguru-topic'] ||
+      bodyEventValue ||
       req.body.status ||
-      '';
+      ''
+    )
+      .toLowerCase()
+      .trim();
     
     // Generate unique eventId for idempotency
     const eventId = req.body.event_id || `${eventType}_${req.body.order_id}_${req.body.event?.datetime || Date.now()}`;
@@ -70,7 +77,12 @@ export const handleParcelGuruWebhook = async (req, res) => {
       cancelled: 'cancelled'
     };
 
-    const newStatus = statusMap[eventType] || statusMap[req.body.event?.status] || order.status;
+    const fallbackBodyEventStatus = String(req.body.event?.status || '')
+      .toLowerCase()
+      .trim();
+    const mappedStatus = statusMap[eventType] || statusMap[fallbackBodyEventStatus];
+    console.log('📦 ParcelGuru Event:', eventType, '=> Status:', mappedStatus);
+    const newStatus = mappedStatus || order.status;
 
     // 6. PREVENT STATUS DOWNGRADE - Only advance if progressing, but cancelled always overrides
     const ORDER_FLOW_RANK = {

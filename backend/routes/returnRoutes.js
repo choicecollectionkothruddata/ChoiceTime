@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect, authorize } from '../middleware/auth.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 import Order from '../models/Order.js';
 import Razorpay from 'razorpay';
 import { createReversePickup } from '../services/parcelGuru.js';

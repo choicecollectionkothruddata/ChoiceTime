@@ -1,0 +1,28 @@
+const ImageKit = require('imagekit');
+const mongoose = require('mongoose');
+require('dotenv').config();
+
+const imagekit = new ImageKit({
+  publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+});
+
+mongoose.connect(process.env.MONGODB_URI).then(async () => {
+  const db = mongoose.connection.db;
+  const products = db.collection('products');
+
+  // Count how many products have broken URLs
+  const broken = await products.countDocuments({ images: /image\/upload/ });
+  console.log('Products with broken images:', broken);
+
+  // Show one example
+  const doc = await products.findOne({ images: /image\/upload/ });
+  if (doc) {
+    console.log('Example product:', doc.name);
+    console.log('Category:', doc.category);
+    console.log('Images:', doc.images);
+  }
+
+  process.exit(0);
+});

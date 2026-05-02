@@ -18,13 +18,13 @@ async function tryUpload(publicId) {
         fileName: publicId + '.jpg',
         folder: '/cloudinary-migration/',
       });
-      console.log(`✅ Migrated from ${account}:`, publicId);
+      console.log('✅ Migrated from ' + account + ': ' + publicId);
       return result.url;
     } catch (err) {
-      // try next
+      // try next account
     }
   }
-  console.log('❌ Not found:', publicId);
+  console.log('❌ Not found: ' + publicId);
   return null;
 }
 
@@ -32,18 +32,24 @@ mongoose.connect(process.env.MONGODB_URI).then(async () => {
   const db = mongoose.connection.db;
   const products = db.collection('products');
   const docs = await products.find({ images: /image\/upload/ }).toArray();
-  console.log('Products still broken:', docs.length);
+  console.log('Products still broken: ' + docs.length);
   for (const doc of docs) {
     const newImages = [];
     for (const img of (doc.images || [])) {
-      if (!img || !img.includes('image/upload')) { newImages.push(img); continue; }
+      if (!img || !img.includes('image/upload')) {
+        newImages.push(img);
+        continue;
+      }
       const match = img.match(/image\/upload\/([a-z0-9]+)\.jpg/);
-      if (!match) { newImages.push(img); continue; }
+      if (!match) {
+        newImages.push(img);
+        continue;
+      }
       const newUrl = await tryUpload(match[1]);
       newImages.push(newUrl || img);
     }
     await products.updateOne({ _id: doc._id }, { $set: { images: newImages } });
   }
-  console.log('🎉 Done!');
+  console.log('Done!');
   process.exit(0);
 });

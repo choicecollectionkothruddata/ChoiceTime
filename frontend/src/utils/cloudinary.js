@@ -2,7 +2,7 @@
 const IMAGEKIT_CONFIG = {
   publicKey: import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY,
   urlEndpoint: import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT,
-  authEndpoint: '/api/imagekit/auth',
+  authEndpoint: 'https://api.choicetime.in/api/imagekit/auth',
 };
 
 export const MAX_PRODUCT_IMAGE_BYTES = 1.5 * 1024 * 1024;

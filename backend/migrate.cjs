@@ -2,9 +2,9 @@ const cloudinary = require('cloudinary').v2;
 const ImageKit = require('imagekit');
 
 cloudinary.config({
-  cloud_name: 'dndqnoxqg',
-  api_key: '757472666593523',
-  api_secret: 'DBrABCY-uwW1kCGA2AQwg4h6ljw'
+  cloud_name: 'dbaihu0aw',
+  api_key: '682653419898917',
+  api_secret: 'qethlMDARKTFCDfDCfOp30JGqNY'
 });
 
 const imagekit = new ImageKit({

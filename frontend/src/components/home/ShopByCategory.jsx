@@ -1,46 +1,12 @@
-import { Link } from 'react-router-dom';
-
 const categories = [
-  { 
-    label: "Men's Watches", 
-    path: '/mens-watches', 
-    image: 'https://ik.imagekit.io/eu78h8v4i/static/mens%20watch.png'
-  },
-  { 
-    label: "Women's Watches", 
-    path: '/womens-watches', 
-    image: 'https://ik.imagekit.io/eu78h8v4i/static/womens%20watch.png'
-  },
-  {
-    label: 'Sunglasses',
-    path: '/sunglasses',
-    image: 'https://ik.imagekit.io/eu78h8v4i/static/sunglasses.png'
-  },
-  { 
-    label: "Men's Belt", 
-    path: '/mens-belts', 
-    image: 'https://ik.imagekit.io/eu78h8v4i/static/belt.png'
-  },
-  {
-    label: 'Mens Wallet',
-    path: '/mens-wallet',
-    image: 'https://ik.imagekit.io/eu78h8v4i/static/ChatGPT%20Image%20May%202,%202026,%2007_58_08%20PM%20(1).png'
-  },
-  { 
-    label: "Men's Perfumes", 
-    path: '/mens-perfumes', 
-    image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=400&auto=format&fit=crop'
-  },
-  {
-    label: 'Accesories',
-    path: '/accessories',
-    image: 'https://ik.imagekit.io/eu78h8v4i/static/Accesories.png'
-  },
-  { 
-    label: "Women's Perfumes", 
-    path: '/womens-perfumes', 
-    image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=400&auto=format&fit=crop'
-  }T
+  { label: "Men's Watches", path: '/mens-watches', image: 'https://ik.imagekit.io/eu78h8v4i/static/menswa.png' },
+  { label: "Women's Watches", path: '/womens-watches', image: 'https://ik.imagekit.io/eu78h8v4i/static/womenswa.png' },
+  { label: 'Sunglasses', path: '/sunglasses', image: 'https://ik.imagekit.io/eu78h8v4i/static/sunglasses.png' },
+  { label: "Men's Belt", path: '/mens-belts', image: 'https://ik.imagekit.io/eu78h8v4i/static/belt.png' },
+  { label: 'Mens Wallet', path: '/mens-wallet', image: 'https://ik.imagekit.io/eu78h8v4i/static/wallet.png' },
+  { label: "Men's Perfumes", path: '/mens-perfumes', image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=400&auto=format&fit=crop' },
+  { label: 'Accesories', path: '/accessories', image: 'https://ik.imagekit.io/eu78h8v4i/static/Accesories.png' },
+  { label: "Women's Perfumes", path: '/womens-perfumes', image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=400&auto=format&fit=crop' }
 ];
 
 const ShopByCategory = () => {

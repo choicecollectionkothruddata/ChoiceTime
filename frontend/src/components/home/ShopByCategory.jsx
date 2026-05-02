@@ -4,27 +4,27 @@ const categories = [
   { 
     label: "Men's Watches", 
     path: '/mens-watches', 
-    image: 'https://res.cloudinary.com/daxdjob49/image/upload/v1770667481/b4976978-8ee9-4b94-8c4d-eb1a0b48e650.png'
+    image: 'https://ik.imagekit.io/eu78h8v4i/static/mens%20watch.png'
   },
   { 
     label: "Women's Watches", 
     path: '/womens-watches', 
-    image: 'https://res.cloudinary.com/daxdjob49/image/upload/v1770666728/19fe40b9-8c6c-4fbe-aed4-9341c931600e.png'
+    image: 'https://ik.imagekit.io/eu78h8v4i/static/womens%20watch.png'
   },
   {
     label: 'Sunglasses',
     path: '/sunglasses',
-    image: 'https://res.cloudinary.com/daxdjob49/image/upload/v1774959710/4b3584ae-244b-4122-bb83-538c93803260.png'
+    image: 'https://ik.imagekit.io/eu78h8v4i/static/sunglasses.png'
   },
   { 
     label: "Men's Belt", 
     path: '/mens-belts', 
-    image: 'https://res.cloudinary.com/daxdjob49/image/upload/v1770666752/b025a01b-ace8-4a69-aba5-6f3390372142.png'
+    image: 'https://ik.imagekit.io/eu78h8v4i/static/belt.png'
   },
   {
     label: 'Mens Wallet',
     path: '/mens-wallet',
-    image: 'https://res.cloudinary.com/daxdjob49/image/upload/v1775115656/634a46ad-525a-4be4-998a-2439ae7a9024.png'
+    image: 'https://ik.imagekit.io/eu78h8v4i/static/ChatGPT%20Image%20May%202,%202026,%2007_58_08%20PM%20(1).png'
   },
   { 
     label: "Men's Perfumes", 
@@ -34,13 +34,13 @@ const categories = [
   {
     label: 'Accesories',
     path: '/accessories',
-    image: 'https://res.cloudinary.com/daxdjob49/image/upload/v1775115876/4f1e726f-c8f1-45a3-a82e-2e34890da1f1.png'
+    image: 'https://ik.imagekit.io/eu78h8v4i/static/Accesories.png'
   },
   { 
     label: "Women's Perfumes", 
     path: '/womens-perfumes', 
     image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=400&auto=format&fit=crop'
-  }
+  }T
 ];
 
 const ShopByCategory = () => {

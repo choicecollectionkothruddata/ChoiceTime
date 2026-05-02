@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+
 const categories = [
   { label: "Men's Watches", path: '/mens-watches', image: 'https://ik.imagekit.io/eu78h8v4i/static/menswa.png' },
   { label: "Women's Watches", path: '/womens-watches', image: 'https://ik.imagekit.io/eu78h8v4i/static/womenswa.png' },

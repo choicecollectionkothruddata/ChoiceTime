@@ -20,7 +20,7 @@ import shippingReturnRoutes from './routes/shippingReturnRoutes.js';
 import returnRoutes from './routes/returnRoutes.js';
 import publicSettingsRoutes from './routes/publicSettingsRoutes.js';
 import parcelGuruWebhookRoutes from './routes/parcelGuruWebhookRoutes.js';
-
+import imagekitRoutes from './routes/imagekitRoute.js';
 dotenv.config();
 
 const app = express();
@@ -95,6 +95,7 @@ console.log('✅ ParcelGuru webhook registered at POST /api/v1/channel/event/hoo
 
 // Register scratch card routes
 app.use('/api/scratch-card', scratchCardRoutes);
+app.use('/api/imagekit', imagekitRoutes);
 console.log('✅ Scratch card routes registered at /api/scratch-card');
 
 console.log('✅ Payment routes registered at /api/payment');

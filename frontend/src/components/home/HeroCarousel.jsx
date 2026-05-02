@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 
 const DESKTOP_BANNER =
-  'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774793598/green_and_yellow_modern_watch_banner_1920_x_600_px_ivfzej.png';
+  'https://ik.imagekit.io/eu78h8v4i/static/hero-banner-1_7jJ62z0ld.png';
 
 const MOBILE_BANNER =
-  'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774794124/green_and_yellow_modern_watch_retractable_banner_600_x_600_px_bowqhd.png';
+  'https://ik.imagekit.io/eu78h8v4i/static/hero-banner-2_C4i3TcXjQ.png';
 
 const HeroCarousel = () => (
   <div className="relative w-full overflow-hidden">

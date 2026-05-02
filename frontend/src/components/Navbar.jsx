@@ -178,7 +178,7 @@ const Navbar = () => {
               <div className="flex items-center md:absolute md:left-1/2 md:-translate-x-1/2">
                 <Link to="/" onClick={scrollToTop} className="flex-shrink-0 group relative z-10">
                   <img
-                    src="https://res.cloudinary.com/dl6hpq7mm/image/upload/f_auto,q_auto,w_200/v1770185345/image-removebg-preview_2_we5d7r.png"
+                    src="https://ik.imagekit.io/eu78h8v4i/static/navbar-logo_iG78_cSMb4.png"
                     alt="choicetime"
                     className="h-10 md:h-14 w-auto object-contain"
                     loading="eager"
@@ -429,7 +429,7 @@ const Navbar = () => {
             <div className="flex items-center gap-3">
               <Link to="/" onClick={() => { setIsMobileMenuOpen(false); scrollToTop(); }}>
                 <img
-                  src="https://res.cloudinary.com/dl6hpq7mm/image/upload/f_auto,q_auto,w_200/v1770185345/image-removebg-preview_2_we5d7r.png"
+                  src="https://ik.imagekit.io/eu78h8v4i/static/navbar-logo_iG78_cSMb4.png"
                   alt="choicetime"
                   className="h-12 w-auto object-contain"
                   loading="eager"

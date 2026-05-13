@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 
 const DESKTOP_BANNER =
-  'https://ik.imagekit.io/eu78h8v4i/static/hero-banner-1_7jJ62z0ld.png';
+  'https://ik.imagekit.io/l6od6mlo3j/static/hero-banner-1_7jJ62z0ld.png';
 
 const MOBILE_BANNER =
-  'https://ik.imagekit.io/eu78h8v4i/static/hero-banner-2_C4i3TcXjQ.png';
+  'https://ik.imagekit.io/l6od6mlo3j/static/hero-banner-2_C4i3TcXjQ.png';
 
 const HeroCarousel = () => (
   <div className="relative w-full overflow-hidden">

@@ -892,7 +892,7 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              {/* Watch Specifications - Only show if any watch field exists */}
+              {/* {(product.category || '').toLowerCase().includes('belt') ? 'Belt Specifications' : (product.category || '').toLowerCase().includes('wallet') ? 'Wallet Specifications' : (product.category || '').toLowerCase().includes('sunglass') ? 'Sunglass Specifications' : '{(product.category || '').toLowerCase().includes('belt') ? 'Belt Specifications' : (product.category || '').toLowerCase().includes('wallet') ? 'Wallet Specifications' : (product.category || '').toLowerCase().includes('sunglass') ? 'Sunglass Specifications' : 'Watch Specifications'}'} - Only show if any watch field exists */}
               {(() => {
                 // Check for watch-specific fields (support both naming conventions)
                 const specs = [
@@ -924,7 +924,7 @@ const ProductDetail = () => {
                         <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        Watch Specifications
+                        {(product.category || '').toLowerCase().includes('belt') ? 'Belt Specifications' : (product.category || '').toLowerCase().includes('wallet') ? 'Wallet Specifications' : (product.category || '').toLowerCase().includes('sunglass') ? 'Sunglass Specifications' : 'Watch Specifications'}
                       </h3>
                     </div>
                     <div className="overflow-x-auto">
